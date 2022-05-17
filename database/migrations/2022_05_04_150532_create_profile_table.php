@@ -18,7 +18,7 @@ return new class extends Migration
             //job status foreign key 1-n
             $table->integer('job_id');
             $table->foreign('job_id')->references('id')->on('jobs');
-            $table->date('request_date')->nullable();
+            $table->date('submit_date')->nullable();
             $table->string('name')->nullable();
             $table->date('birthday')->nullable();
             $table->string('phone_number')->nullable();
@@ -29,7 +29,7 @@ return new class extends Migration
             $table->foreign('profile_status_id')->references('id')->on('profile_statuses');
             //language foreign key 1-n
             $table->integer('language_id')->unsigned()->nullable();
-            $table->foreign('languages_id')->references('id')->on('language');
+            $table->foreign('language_id')->references('id')->on('language');
             $table->integer('year_of_experience')->nullable();
             $table->text('note')->nullable();
             $table->timestamps();

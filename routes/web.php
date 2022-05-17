@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 */
 Route::get('/', [HomeController::class, 'index'])->middleware('auth');
 Route::get('/home/filter/{id}', [HomeController::class, 'filterHome'])->middleware('auth');
-Route::get('home/update/{id}', [HomeController::class, 'updateStatusCv'])->middleware('auth');
+Route::get('home/update/{id}', [HomeController::class, 'updateStatusProfile'])->middleware('auth');
 
 Route::get('/login', [AuthController::class, 'getLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'postLogin'])->name('login');

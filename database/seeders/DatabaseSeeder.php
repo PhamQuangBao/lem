@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use Database\Factories\FilesFactory;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,6 +14,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // \App\Models\User::factory(10)->create();
+        $this->call([
+            UserRoleSeeder::class,
+            UserSeeder::class,
+            JobStatusSeeder::class,
+            BranchSeeder::class,
+            ProfileStatusGroupSeeder::class,
+            ProfileStatusSeeder::class,
+            JobSeeder::class,
+            ProfileSeeder::class,
+            // FileSeeder::class,
+        ]);
     }
 }

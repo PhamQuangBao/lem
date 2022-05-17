@@ -22,7 +22,7 @@ return new class extends Migration
             $table->date('request_date');
             //skill foreign key 1-n
             $table->integer('branch_id')->unsigned()->nullable();
-            $table->foreign('branch_id')->references('id')->on('branch');
+            $table->foreign('branch_id')->references('id')->on('branches');
             $table->text('description')->nullable();
             $table->date('close_date')->nullable();
             $table->timestamps();

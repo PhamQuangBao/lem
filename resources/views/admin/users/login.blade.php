@@ -13,7 +13,11 @@
     <div class="card">
         <div class="card-body login-card-body">
         <p class="login-box-msg">Sign in to start your session</p>
-        @include('admin.alert')
+        @if(Session::has('error'))
+        <div class="text-center mb-2">
+            <strong class="text-danger">Error! {{Session::get('error')}}</strong> 
+        </div> 
+        @endif
         <form action="/login" method="post">
 
             <div class="input-group mb-3">

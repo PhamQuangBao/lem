@@ -25,6 +25,17 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        //
+        Gate::define('user.role', function($user, ...$roleID){
+
+            $userID = $user->id;
+            //check have Role by UserID
+            $userRepository = $this->app['App\Repositories\UserRepositoryInterface'];
+            $hasRole =  $userRepository->getRolesIDByUserID($userID, $roleID);
+            
+            if ($hasRole) {
+                return true;
+            }
+            return false;
+        });
     }
 }

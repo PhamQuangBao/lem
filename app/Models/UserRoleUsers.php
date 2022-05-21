@@ -13,6 +13,7 @@ class UserRoleUsers extends Pivot
      */
     protected $table = 'user_role_users';
     protected $fillable = [
+        'id',
         'user_id',
         'role_id',
     ];
@@ -23,7 +24,7 @@ class UserRoleUsers extends Pivot
      */
     public function users()
     {
-        return $this->hasMany(Users::class, 'user_id');
+        return $this->hasOne(Users::class, 'user_id', 'id');
     }
 
     /**
@@ -32,6 +33,6 @@ class UserRoleUsers extends Pivot
      */
     public function userRoles()
     {
-        return $this->hasMany(userRoles::class, 'role_id');
+        return $this->hasOne(UserRoles::class, 'id', 'role_id');
     }
 }

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreJobRequest;
 use App\Http\Requests\UpdateJobRequest;
 use App\Repositories\JobRepositoryInterface;
+use App\Repositories\ProfileRepositoryInterface;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class JobController extends Controller
@@ -15,8 +17,10 @@ class JobController extends Controller
      */
     public function __construct(
         JobRepositoryInterface $jobRepository,
+        ProfileRepositoryInterface $profileRepository,
     ) {
         $this->jobRepository = $jobRepository;
+        $this->profileRepository = $profileRepository;
     }
 
     public function list()
@@ -79,7 +83,33 @@ class JobController extends Controller
         $job_statuses = $this->jobRepository->getJobStatuses();
         $job = $this->jobRepository->findJob($id);
         if ($job) {
-            return view('admin.jobs.detail', ['title' => 'Job Detail', 'job' => $job, 'job_statuses' => $job_statuses]);
+            $checkHasQuestionResponses = $this->jobRepository->checkJobHasQuestionResponses($id);
+            if($checkHasQuestionResponses) {
+                //show responses if job has responses
+                $QuestionResponses = $this->jobRepository->getQuestionResponsesByJobId($id);
+                $AnswerResponses = $this->jobRepository->getAnswerResponsesByQuestionId($QuestionResponses->id);
+                $arrAnswer = array();
+                foreach ($AnswerResponses as $answer) {
+                    array_push($arrAnswer, json_decode($answer->answer, true));
+                }
+                for ($i=0; $i < count($arrAnswer); $i++) { 
+                    if($this->profileRepository->checkEmailIsExits($arrAnswer[$i]['answer_3'])){
+                        $arrAnswer[$i]['check'] = true;
+                    }
+                }
+                return view('admin.jobs.detail', [
+                    'title' => 'Job Detail',
+                    'job' => $job,
+                    'job_statuses' => $job_statuses,
+                    'arrQuestion' => json_decode($QuestionResponses->question, true),
+                    'arrAnswer' =>  $arrAnswer,
+                ]);
+            }
+            return view('admin.jobs.detail', [
+                'title' => 'Job Detail', 
+                'job' => $job, 
+                'job_statuses' => $job_statuses
+            ]);
         } else {
             return redirect()->back()->with('error', 'Job not found!');
         }
@@ -151,33 +181,129 @@ class JobController extends Controller
         }
     }
 
-    public function checkListCV(Request $request){
+    public function importResponses(Request $request)
+    {
+        $file = $request->file('fileUpload');
+        //read fileUpload
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+        $spreadsheet = $reader->load($file);
+        //add data from file to array
+        $dataExcel = $spreadsheet->getSheet(0)->toArray();
+        //read question row
+        $arrQuestion = array();
+        for ($i = 0; $i < count($dataExcel[0]); $i++) {
+            if ($dataExcel[0][$i]) {
+                array_push($arrQuestion, $dataExcel[0][$i]);
+            }
+        }
+        //read all answer row
+        $arrAnswer = array();
+        for ($y=1; $y < count($dataExcel); $y++) {
+            for ($i=0; $i < count($dataExcel[$y]); $i++) {
+                if ($dataExcel[$y][$i]) {
+                    $arrAnswer[$y-1]['check'] = false;
+                    $arrAnswer[$y-1]['answer_'.$i] = $dataExcel[$y][$i];
+                }
+            }
+        }
+        //check job exists
+        $job_statuses = $this->jobRepository->getJobStatuses();
+        $job = $this->jobRepository->find($request->jobId);
+        if ($job) {
+            // $jobInterviews = $this->interviewRepo->getInterviewsByJob($request->jobId);
+            // $offerJobs = array();
+            // foreach ($jobInterviews as $jobInterview) {
+            //     if ($jobInterview->salary_offer) {
+            //         $offerJobs[] = $jobInterview->salary_offer;
+            //     }
+            // }
+            return view('admin.jobs.detail', [
+                'title' => 'Job Detail',
+                'job' => $job,
+                'job_statuses' => $job_statuses,
+                'arrAnswer' => $arrAnswer,
+                'arrQuestion' => $arrQuestion,
+                // 'countInterviewsByJobs' => count($jobInterviews),
+                // 'countOfferByJobs' => count($offerJobs),
+                'addResponses' => true
+            ]);
+        } else {
+            return redirect()->back()->with('error', 'Job not found!');
+        }
+    }
+
+    public function storeResponses(Request $request)
+    {
+        try {
+            $data = $request->all();
+            // dd($data);
+            //check job exists
+            $job = $this->jobRepository->find(intval($data['job_id']));
+            if ($job) {
+                //delete old Responses
+                $checkHasQuestionResponses = $this->jobRepository->checkJobHasQuestionResponses($job->id);
+                if ($checkHasQuestionResponses) {
+                    $QuestionResponses = $this->jobRepository->getQuestionResponsesByJobId($job->id);
+                    $AnswerResponses = $this->jobRepository->getAnswerResponsesByQuestionId($QuestionResponses->id);
+                    //delete old answer
+                    foreach ($AnswerResponses as $answer) {
+                        $answer = $answer->delete();
+                    }
+                    //delete old Question
+                    $QuestionResponses = $QuestionResponses->delete();
+                }
+                //store new Responses
+                //store Question
+                $qs = $this->jobRepository->createQuestionResponses([
+                    'job_id' => $job->id,
+                    'question'      => $data['question'],
+                ]);
+                //store Answers
+                if (isset($request->answer)) {
+                    $listAnswer = $request->answer;
+                    for ($i = 0; $i < count($listAnswer); $i++) {
+                        $this->jobRepository->createAnswerResponses([
+                            'question_id' => $qs->id,
+                            'answer'      => $listAnswer[$i],
+                        ]);
+                    }
+                }
+                return redirect('/jobs/' . $data['job_id'] . '/detail')->with('success', 'Save respose is successfully!');
+            } else {
+                return redirect('/jobs/list')->with('error', 'Job not found!');
+            }
+        } catch (\Throwable $th) {
+            return redirect('/jobs/' . $data['job_id'] . '/detail')->with('error', 'Save respose has something wrong!');
+        }
+    }
+
+    public function checkListProfile(Request $request){
         //check has any list checkbox is checked
         if (isset($request->selectSave)) {
-            $intern_job_id = $request->intern_job_id;
+            $job_id = $request->job_id;
             $listRequestSelectSave = $request->selectSave;
             $listResults = array();
             //colecttion data
             for ($i=count($listRequestSelectSave)-1; $i > -1 ; $i--) {
-                $cv = json_decode($listRequestSelectSave[$i]);
+                $profile = json_decode($listRequestSelectSave[$i]);
                 $data = [
-                    'mail' => $cv->answer_3,
+                    'mail' => $profile->answer_3,
                     'submit_date' => Carbon::now()->format('Y-m-d'),
-                    'phone_number' => $cv->answer_4,
-                    'name' => $cv->answer_2,
-                    'job_id' => $intern_job_id,
-                    'university_id' => $this->checkUniversity($cv->answer_5)['id'],
-                    'university_name'=>$this->checkUniversity($cv->answer_5)['name'],
-                    'channel_id' => $this->checkChannels($cv->answer_6)['id'],
-                    'channel_name' => $this->checkChannels($cv->answer_6)['name'],
-                    'cv_status_id' => 3,
-                    'link' => end($cv),
+                    'phone_number' => $profile->answer_4,
+                    'name' => $profile->answer_2,
+                    'job_id' => $job_id,
+                    // 'university_id' => $this->checkUniversity($profile->answer_5)['id'],
+                    // 'university_name'=>$this->checkUniversity($profile->answer_5)['name'],
+                    // 'channel_id' => $this->checkChannels($profile->answer_6)['id'],
+                    // 'channel_name' => $this->checkChannels($profile->answer_6)['name'],
+                    'profile_status_id' => 3,
+                    'link' => end($profile),
                     'year_of_experience' => 0,
                 ];
                 //check is duplicate email and not exits
                 foreach($listResults as $index => $item){
                     if($item['mail'] === $data['mail']){
-                        if(!$this->internCvRepository->checkEmailIsExits($data['mail'])){
+                        if(!$this->profileRepository->checkEmailIsExits($data['mail'])){
                             $listResults[$index]['status'] = 'duplicate';
                             $data['status'] = 'duplicate';
                             break;
@@ -185,7 +311,7 @@ class JobController extends Controller
                     }
                 }
                 //check is exits email
-                if(!$this->internCvRepository->checkEmailIsExits($data['mail'])){
+                if(!$this->profileRepository->checkEmailIsExits($data['mail'])){
                     if(empty($data['status'])){
                         $data['status'] = 'saved';
                     }
@@ -195,15 +321,16 @@ class JobController extends Controller
                 array_push($listResults, $data);
                 $data = array();
             }
-            return view('admin.intern-jobs.list-cv', [
-                'title' => 'List intern cv preview',
-                'listInternCV' => $listResults,
+            return view('admin.jobs.list-profile', [
+                'title' => 'List profile preview',
+                'listProfile' => $listResults,
             ]);
         }
         return redirect()->back()->with('error', 'Please choose some one!');
        
     }
-    public function saveListCV(Request $request){
+
+    public function saveListProfile(Request $request){
         //check has any list checkbox is checked
         if(isset($request->selectSave)){
             $listRequestSelectSave = $request->selectSave;

@@ -205,5 +205,51 @@ class ProfileRepository extends BaseRepository implements ProfileRepositoryInter
         $profiles = Profile::select('profile.id', 'profile.job_id', 'profile.name', 'profile.phone_number', 'profile.profile_status_id')->where('job_id', $id)->join('profile_statuses', 'profile_statuses.id', '=', 'profile.profile_status_id')->where('profile_statuses.profile_status_group_id', $profile_status_group_id)->orderBy('submit_date', 'DESC')->get();
         return $profiles;
     }
+
+    /**
+     * @param job_id, profile_status_id, branch_id, date_from_to, search_val
+     * 
+     * 
+     * @return App\Models\Profile
+     */
+    public function getProfileListByFilter($job_id, $profile_status_id, $branch_id, $date_from_to, $search_val)
+    {
+        $profiles = Profile::with('profileJobs');
+
+        if(!empty($job_id)){
+            $profiles = $profiles->where('job_id', $job_id);
+        }
+        if(!empty($profile_status_id)){
+            $profiles = $profiles->where('profile_status_id', $profile_status_id);
+        }
+        if(!empty($branch_id)){
+            $arr_branch_id = explode(',', $branch_id);
+            //You can pass the necessary variables from the parent scope into the closure with the use keyword.
+            $profiles = $profiles->whereHas('profileJobs', function($q) use ($arr_branch_id) {
+                $q->whereIn('branch_id', $arr_branch_id);
+            });
+        }
+        if(!empty($date_from_to)){
+            $arr_date = explode(',', $date_from_to);
+            $profiles = $profiles->whereBetween('submit_date', $arr_date);
+        }
+        if(!empty($search_val)){
+            $profiles = $profiles->where('name', 'LIKE', "%{$search_val}%");
+        }
+        $profiles = $profiles->orderBy('submit_date', 'DESC')->paginate(10);
+        return $profiles;
+    }
     
+    /**
+     * Check email is exits in InternCV
+     * @param String email
+     * @return InternCV
+     */
+    public function checkEmailIsExits($strEmail){
+        $profile = Profile::where('mail', $strEmail)->first();
+        if($profile){
+            return $profile;
+        }
+        return false;
+    }
 }

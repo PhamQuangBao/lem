@@ -36,7 +36,7 @@
         <!-- Main Sidebar Container -->
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <!-- Brand Logo -->
-            <a href="/" class="brand-link"><img src="/template/logo.png" style="border-radius:50%"><span>&emsp;Logooo </span></a>
+            <a href="/" class="brand-link"><img src="" style="border-radius:50%"><span>&emsp;Logo </span></a>
             <!-- Sidebar -->
             <div class="sidebar">
                 <!-- Sidebar user panel (optional) -->
@@ -44,7 +44,24 @@
                     <div class="image">
                         <img src="/uploads/users/avatar-default.jpg" class="img-circle elevation-2" alt="User Image">
                     </div>
-                    
+                    <div class="info">
+                        <a href="/profile/edit" class="d-block">{{(Auth::user()->name)}}</a>
+                        @can('user.role', 1)
+                        <span class="badge badge-danger">
+                            Super Admin
+                        </span>
+                        @endcan
+                        @can('user.role', 2)
+                        <span class="badge badge-warning">
+                            Admin
+                        </span>
+                        @endcan
+                        @can('user.role', 3)
+                        <span class="badge badge-success">
+                            Interviewer
+                        </span>
+                        @endcan
+                    </div>
                     <a href="/logout" class="nav-link" style="width:30px;float:right;"><i class="fas fa-sign-out-alt"></i></a>
 
                 </div>
@@ -171,6 +188,32 @@
                                 </li>
                             </ul>
                         </li>
+                        <!-- User role Super admin or admin -->
+                        @can('user.role', 1)
+                        <li class="nav-item {{ request()->is('users*') ? 'menu-is-opening menu-open' : '' }}">
+                            <a href="#" class="nav-link">
+                                <i class="nav-icon fas fa-user-cog"></i>
+                                <p>
+                                    Users
+                                    <i class="fas fa-angle-left right"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="/users/add" class="nav-link {{ request()->is('users/add*') ? 'active' : '' }}">
+                                        &emsp;<i class="nav-icon fas fa-user-plus"></i>
+                                        <p>Add new User</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/users/list" class="nav-link {{ request()->is('users/list*') ? 'active' : '' }}">
+                                        &emsp;<i class="nav-icon fas fa-users"></i>
+                                        <p>Users List</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        @endcan
                 </nav>
                 <!-- /.sidebar-menu -->
             </div>

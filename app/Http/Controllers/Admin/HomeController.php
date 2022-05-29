@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Users;
 use App\Repositories\JobRepositoryInterface;
 use App\Repositories\ProfileRepositoryInterface;
+use App\Repositories\UserRepositoryInterface;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -12,10 +14,14 @@ class HomeController extends Controller
     /**
      * @var PostRepositoryInterface|\App\Repositories\Repository
      */
-    public function __construct(ProfileRepositoryInterface $profileRepository, JobRepositoryInterface $jobRepository)
+    public function __construct(
+        ProfileRepositoryInterface $profileRepository, 
+        JobRepositoryInterface $jobRepository,
+        UserRepositoryInterface $userRepository)
     {
         $this->profileRepository = $profileRepository;
         $this->jobRepository = $jobRepository;
+        $this->userRepository = $userRepository;
     }
 
     public function index()
@@ -26,6 +32,8 @@ class HomeController extends Controller
         $profilesInp = $this->profileRepository->getAllProfileStatusInProWithJobOpen();
         $profilesUnqualified = $this->profileRepository->getAllProfileStatusUnqualifiedWithJobOpen();
         $profilesQualified = $this->profileRepository->getAllProfileStatusQualifiedWithJobOpen();
+
+        // dd($this->userRepository->getRolesIDByUserID(2, [2]));
         return view('admin.home.home', [
             'title' => 'Home page',
             'jobs' => $jobs_status_open,

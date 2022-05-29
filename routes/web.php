@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Controllers\Admin\Auth\AuthController;
+use App\Http\Controllers\Admin\Auth\GmailController;
 use App\Http\Controllers\Admin\HomeController;
 use App\Http\Controllers\Admin\JobController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\UserController;
+use Dacastro4\LaravelGmail\Facade\LaravelGmail;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -28,7 +30,24 @@ Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 // Google URL
 Route::get('login/google', [AuthController::class, 'redirectGoogle'])->name('login.google');
 
+Route::group(['prefix' => 'profile/gmail', 'middleware' => 'auth'], function () {
+    Route::get('/', [GmailController::class, 'home']);
+    Route::get('/oauth/gmail', [GmailController::class, 'loginGmail']);
+    Route::post('/list-profile', [GmailController::class, 'listProfile']);
+    Route::get('/get/newest', [GmailController::class, 'getGmailNewest']);
+    Route::post('/store', [GmailController::class, 'store']);
+   // Route::get('/list-profile', [GmailController::class, 'listCV']);
+    
+    Route::get('/oauth/gmail/callback', function (){
+        LaravelGmail::makeToken();
+        return redirect()->to('profile/gmail');
+    });
 
+    Route::get('/oauth/gmail/logout', function (){
+        LaravelGmail::logout(); //It returns exception if fails
+        return redirect()->to('profile/gmail');
+    });
+});
 
 Route::group(['prefix' => 'jobs', 'middleware' => 'auth'], function () {
     Route::get('/add', [JobController::class, 'add']);
@@ -39,6 +58,10 @@ Route::group(['prefix' => 'jobs', 'middleware' => 'auth'], function () {
     Route::get('{id}/edit', [JobController::class, 'edit'])->name('admin.jobs.edit');
     Route::post('{id}/update', [JobController::class, 'update'])->name('admin.jobs.update');
     Route::get('{id}/delete', [JobController::class, 'destroy']);
+    Route::post('/importResonse', [JobController::class, 'importResponses']);
+    Route::post('/storeResonse', [JobController::class, 'storeResponses']);
+    Route::post('/check-profiles', [JobController::class, 'checkListProfile']);
+    Route::post('/save-profiles', [JobController::class, 'saveListProfile']);
 });
 
 Route::group(['prefix' => 'profile', 'middleware' => 'auth'], function () {

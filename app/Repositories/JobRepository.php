@@ -3,6 +3,8 @@
 namespace App\Repositories;
 
 use App\Models\Branches;
+use App\Models\FormAnswerResponses;
+use App\Models\FormQuestionResponses;
 use App\Models\Jobs;
 use App\Models\JobStatuses;
 
@@ -151,4 +153,57 @@ class JobRepository extends BaseRepository implements JobRepositoryInterface
     //job status open with Id = 1
     return Jobs::where('job_status_id', '1')->orderBy('request_date', 'DESC')->get();
   }
+
+  /**
+   * Check job has QuestionResponses
+   * @return bool
+   */
+  public function checkJobHasQuestionResponses($job_id)
+  {
+    $cv = FormQuestionResponses::where('job_id', $job_id)->first();
+    if ($cv) {
+      return $cv;
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * get QuestionResponses
+   * @return array 
+   */
+  public function getQuestionResponsesByJobId($job_id)
+  {
+    return FormQuestionResponses::where('job_id', $job_id)->first();
+  }
+
+  /**
+   * get list AnswerResponses
+   * @return array
+   */
+  public function getAnswerResponsesByQuestionId($question_id)
+  {
+    return FormAnswerResponses::where('question_id', $question_id)->get();
+  }
+
+  /**
+   * Create new QuestionResponses
+   * @param
+   * @return App\Models\QuestionResponses;
+   */
+  public function createQuestionResponses($attributes = [])
+  {
+    return FormQuestionResponses::create($attributes);
+  }
+
+  /**
+   * Create new AnswerResponses
+   * @param
+   * @return App\Models\AnswerResponses;
+   */
+  public function createAnswerResponses($attributes = [])
+  {
+    return FormAnswerResponses::create($attributes);
+  }
+
 }

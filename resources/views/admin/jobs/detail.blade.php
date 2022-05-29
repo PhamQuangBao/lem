@@ -38,6 +38,11 @@
         </span>
         @endif
     </div>
+    <div class="mt-2 ml-2 h5">
+        <span class="badge bg-primary">
+            {{ count($job->Profile) }} Profile
+        </span>
+    </div>
 </div>
 <div class="container-fluid border p-3 bg-light">
     <!-- show message -->
@@ -66,6 +71,8 @@
                         </option>
                         @endforeach
                     </select>
+                    <div class="input-group-append" id="div-submits-job-status">
+                    </div>
                 </div>
             </div>
             <div class="col-md-6 row">
@@ -108,11 +115,11 @@
     </form>
     <fieldset class="border bg-light px-5">
         <legend class='text-danger'>Responses</legend>
-        <form action="/intern-jobs/importResonse" class="pb-5" method="post" enctype="multipart/form-data">
+        <form action="/jobs/importResonse" class="pb-5" method="post" enctype="multipart/form-data">
             @csrf
             <div class="row">
                 <div class="col-md-12">
-                    <input type="hidden" name="JobId" value="{{ $job->id }}">
+                    <input type="hidden" name="jobId" value="{{ $job->id }}">
                     <div style="float:left; margin:0 20px 0 0; padding-top: 10px">
                         <label>Attachment File<span class="text-danger"> *</span></label>
                     </div>
@@ -124,7 +131,7 @@
                     </div>
                     <div style="float:left; margin:0 20px 0 0;padding-left: 40px">
                         <button type="submit" id="submit-import" class="btn btn-primary">Import</button>
-                        <a type="button" href="/intern-jobs/list" class="btn btn-default">Cancel</a>
+                        <a type="button" href="/jobs/list" class="btn btn-default">Cancel</a>
                     </div>
                 </div>
             </div>
@@ -135,14 +142,14 @@
                 <i></i>
                 </a> Email exits
             </div>
-            <form action="/intern-jobs/check-cvs" target="_blank" method="post">
+            <form action="/jobs/check-profiles" target="_blank" method="post">
                 @csrf
-                <input type="hidden" name="intern_job_id" value="{{ $job->id }}">
+                <input type="hidden" name="job_id" value="{{ $job->id }}">
                 <table id="example" class="table table-bordered table-striped dataTable dtr-inline">
                     <thead>
                         <tr>
-                            @if (request()->is('intern-jobs/'. $internJob->id .'/detail*'))
-                                <th>action</th>
+                            @if (request()->is('jobs/'. $job->id .'/detail*'))
+                                <th class="no-sort"><input type="checkbox" name="select-all" id="select-all" />  Select all</th>
                             @endif
                             @foreach ($arrQuestion as $item)
                                 <th>{{ $item }}</th>
@@ -153,7 +160,7 @@
                         @if (isset($arrAnswer) && !empty($arrAnswer))
                             @for ($y = 0; $y < count($arrAnswer); $y++)
                                 <tr @if (isset($arrAnswer[$y]['check']) && $arrAnswer[$y]['check'] === true ) style='background-color:#ff9999' @endif>
-                                    @if (request()->is('intern-jobs/'. $internJob->id .'/detail*'))
+                                    @if (request()->is('jobs/'. $job->id .'/detail*'))
                                         <div >
                                             <td class="text-center"><input type="checkbox" name="selectSave[]" id="" value="{{ json_encode($arrAnswer[$y]) }}"></td>
                                         </div>
@@ -173,19 +180,19 @@
                         @endif
                     </tbody>
                 </table>
-                @if (request()->is('intern-jobs/'. $internJob->id .'/detail*'))
+                @if (request()->is('jobs/'. $job->id .'/detail*'))
                     <div class="text-center py-3">
-                        <button type="submit" id="check_cv" class="btn btn-primary">Check CV</button> 
+                        <button type="submit" id="check_profile" class="btn btn-primary">Check Profile</button> 
                     </div>
                 @endif
             </form>
-            @if (request()->is('intern-jobs/importResonse*'))
-                <form action="/intern-jobs/storeResonse" method="post" onSubmit="submitAction();">
+            @if (request()->is('jobs/importResonse*'))
+                <form action="/jobs/storeResonse" method="post" onSubmit="submitAction();">
                     @csrf
                     @foreach ($arrAnswer as $item)
                         <input type="hidden" value="{{ json_encode($item) }}" name="answer[]">
                     @endforeach
-                    <input type="hidden" name="intern_job_id" value="{{ $internJob->id }}">
+                    <input type="hidden" name="job_id" value="{{ $job->id }}">
                     <input type="hidden" value="{{ json_encode($arrQuestion) }}" name="question">
                     <div class="text-center py-3">
                         <button type="submit" id="submits" class="btn btn-primary">Save responses</button>
@@ -198,6 +205,21 @@
 @endsection
 
 @section('footer')
+<script src="/template/admin/plugins/jquery/jquery.min.js"></script>
+<script src="/template/admin/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/template/admin/plugins/datatables/jquery.dataTables.min.js"></script>
+<script src="/template/admin/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+<script src="/template/admin/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+<script src="/template/admin/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+<script src="/template/admin/plugins/datatables-buttons/js/dataTables.buttons.min.js"></script>
+<script src="/template/admin/plugins/datatables-buttons/js/buttons.bootstrap4.min.js"></script>
+<script src="/template/admin/plugins/jszip/jszip.min.js"></script>
+<script src="/template/admin/plugins/pdfmake/pdfmake.min.js"></script>
+<script src="/template/admin/plugins/pdfmake/vfs_fonts.js"></script>
+<script src="/template/admin/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
+<script src="/template/admin/plugins/datatables-buttons/js/buttons.print.min.js"></script>
+<script src="/template/admin/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
+<script src="/template/admin/dist/js/adminlte.min.js?v=3.2.0"></script>
 <script>
     $('#submits').attr('disabled', true);
     $('.form-control').change(function() {
@@ -215,6 +237,77 @@
     }).on("input", function() {
         this.style.height = "auto";
         this.style.height = (this.scrollHeight) + "px";
+    });
+
+    //Submit disable, enabled when submit file
+    $('#submit-import').attr('disabled', 'disabled');
+    $('#fileUpload').change(function() {
+        let allowedFiles = [".xlsx"];
+        let fileName = $('#fileUpload').val();
+        let endFileName = fileName.substring(fileName.lastIndexOf('.'));
+        if (allowedFiles.indexOf(endFileName) > -1) {
+            $('#submit-import').removeAttr('disabled');
+        } else {
+            $('#submit-import').attr('disabled', 'disabled');
+        }
+    });
+
+    $('#job_status_id').change(function() {
+        $('#div-submits-job-status').empty();
+        if(parseInt({{ $job->job_status_id }}) != parseInt($('#job_status_id').val())){
+            $('#div-submits-job-status').append("<button type='submit' id='submits-job-status' class='btn btn-primary'>Save</button>");
+        }else{
+            $('#div-submits-job-status').empty();
+        }
+    });
+
+    $('#example').DataTable( {
+        "order": [[ 1, "desc" ]],
+        "scrollX": true,
+        scrollCollapse: true,
+        "paging":   false,
+        columnDefs: [
+            { 
+                'targets': 0, /* column index */
+                'orderable': false, /* true or false */
+             }
+        ],
+        fixedColumns: true,
+    });
+
+    $('#check_profile').attr('disabled', true);
+    var countChecked = function() {
+        var n = $( "input:checked" ).length;
+        return parseInt(n);
+    };
+    countChecked();
+ 
+    $( "input[type=checkbox]" ).change(function() {
+        console.log(countChecked());
+        if (countChecked() > 0 ) {
+            $('#check_profile').attr('disabled', false);
+        } else {
+            $('#check_profile').attr('disabled', true);
+        }
+    });
+    // Listen for click on toggle checkbox
+    $('#select-all').click(function(event) {   
+        if(this.checked) {
+            // Iterate each checkbox
+            $(':checkbox').each(function() {
+                this.checked = true;                        
+            });
+        } else {
+            $(':checkbox').each(function() {
+                this.checked = false;                       
+            });
+        }
+    });
+    $(function() {
+        var check = {!!isset($addResponses) ? "true" : "false" !!}
+        if (check) {
+            alert('Successfully imported responses preview!');
+        }
     });
 
     function copytoClipboard() {
@@ -235,8 +328,6 @@
             $('#iconCopy').empty();
             $('#iconCopy').append("<i class='far fa-copy fa-lg text-dark'></i>");
         }, 1500);
-
-
     }
 </script>
 @endsection

@@ -48,7 +48,7 @@
                             <a href="/profile/add">
                                 <div class="info-box bg-primary">
                                     <div class="info-box-content">
-                                        <h3 class="info-box-text text-dark text-center mb-0">ADD NEW Profile</h3>
+                                        <h3 class="info-box-text text-dark text-center mb-0">Add New Profile</h3>
                                     </div>
                                 </div>
                             </a>

@@ -241,9 +241,9 @@ class ProfileRepository extends BaseRepository implements ProfileRepositoryInter
     }
     
     /**
-     * Check email is exits in InternCV
+     * Check email is exits in Profile
      * @param String email
-     * @return InternCV
+     * @return Profile
      */
     public function checkEmailIsExits($strEmail){
         $profile = Profile::where('mail', $strEmail)->first();

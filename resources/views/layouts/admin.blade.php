@@ -88,12 +88,6 @@
                                 <p>Home</p>
                             </a>
                         </li>
-                        <li class="nav-item {{ request()->is('calendar*') ? 'menu-is-opening menu-open' : '' }}">
-                            <a href="/calendar" class="nav-link">
-                                <i class="nav-icon far fa-calendar-alt"></i>
-                                <p>Calendar</p>
-                            </a>
-                        </li>
                         <li class="nav-item {{ request()->is('charts*') ? 'menu-is-opening menu-open' : '' }}">
                             <a href="#" class="nav-link">
                                 <i class="nav-icon fas fa-chart-area"></i>
@@ -104,18 +98,6 @@
                             </a>
                             <ul class="nav nav-treeview">
                                 <li class="nav-item">
-                                    <a href="/charts/channels" class="nav-link {{(request()->is('charts/channels*')) ? 'active' : ''}}">
-                                        &emsp;<i class="fas fa-chart-bar nav-icon"></i>
-                                        <p>Channels</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="/charts/university" class="nav-link {{(request()->is('charts/university*')) ? 'active' : ''}}">
-                                        &emsp;<i class="fas fa-chart-bar nav-icon"></i>
-                                        <p>University</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
                                     <a href="/charts/total-profile" class="nav-link {{(request()->is('charts/total-profile*')) ? 'active' : ''}}">
                                         &emsp;<i class="fas fa-chart-bar nav-icon"></i>
                                         <p>Total Profile</p>
@@ -125,12 +107,6 @@
                                     <a href="/charts/jobs" class="nav-link {{(request()->is('charts/jobs*')) ? 'active' : ''}}">
                                         &emsp;<i class="fas fa-chart-bar nav-icon"></i>
                                         <p>Jobs</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="/charts/salary" class="nav-link {{(request()->is('charts/salary*')) ? 'active' : ''}}">
-                                        &emsp;<i class="nav-icon fas fa-table"></i>
-                                        <p>Salary</p>
                                     </a>
                                 </li>
                             </ul>

@@ -335,17 +335,17 @@ class JobController extends Controller
         if(isset($request->selectSave)){
             $listRequestSelectSave = $request->selectSave;
             $count = 0;
-            //save list Cvs
+            //save list Profiles
             for ($i=0; $i < count($listRequestSelectSave) ; $i++) { 
-                $cv = json_decode($listRequestSelectSave[$i]);
-                if(!$this->internCvRepository->checkEmailIsExits($cv->mail) && empty($data["status"])){
-                    $this->internCvRepository->create((array) $cv);
+                $profile = json_decode($listRequestSelectSave[$i]);
+                if(!$this->profileRepository->checkEmailIsExits($profile->mail) && empty($data["status"])){
+                    $this->profileRepository->create((array) $profile);
                     $count++;
                 }
             }
-            return redirect('/intern-jobs/'. $cv->job_id .'/detail')->with('success', 'Save '.$count.' is successfully!');
+            return redirect('/jobs/'. $profile->job_id .'/detail')->with('success', 'Save '.$count.' is successfully!');
         }
-        return redirect('/intern-jobs/'. $request->intern_job_id .'/detail')->with('error', 'Please choose some one!');
+        return redirect('/jobs/'. $request->job_id .'/detail')->with('error', 'Please choose some one!');
     }
 
     /**

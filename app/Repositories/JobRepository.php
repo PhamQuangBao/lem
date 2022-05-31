@@ -206,4 +206,13 @@ class JobRepository extends BaseRepository implements JobRepositoryInterface
     return FormAnswerResponses::create($attributes);
   }
 
+  /**
+   * Get All jobs with Branches by status open and closed
+   * @return App\Models\Profile
+   */
+  public function getJobWithSkillOnAddProfile()
+  {
+    return Jobs::with('Branches')->whereIn('job_status_id', [1, 2])->orderBy('request_date', 'DESC')->get();
+  }
+
 }

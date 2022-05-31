@@ -77,7 +77,7 @@ Route::group(['prefix' => 'profile', 'middleware' => 'auth'], function () {
     Route::post('/storeInterviewResult', [ProfileController::class, 'storeInterviewResult']);
 });
 
-Route::group(['prefix' => 'users', 'middleware' => 'auth.role: 1'], function () {
+Route::group(['prefix' => 'users', 'middleware' => 'auth'], function () {
     Route::get('add', [UserController::class, 'add']);
     Route::post('/store', [UserController::class, 'store'])->name('admin.users.store');
     // Route::get('{id}/detail', [UserController::class, 'show']);

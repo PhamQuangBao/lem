@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProfileRequest;
+use App\Http\Requests\UpdateProfileRequest;
 use App\Repositories\JobRepositoryInterface;
 use App\Repositories\ProfileRepositoryInterface;
 use Carbon\Carbon;
@@ -158,61 +159,140 @@ class ProfileController extends Controller
         }
     }
 
+    public function edit($id)
+    {
+        $profile = $this->profileRepository->find($id);
+        // $interviews = $this->interviewRepo->findByProfileId($id);
+        // $interviewers = $this->userRepository->getAll();
+
+        // if (isset($interviews) && isset($interviews['time_at'])) {
+        //     $interviewTime = Carbon::parse($interviews['time_at'])->format('m/d/Y h:i A');
+        // } else {
+        //     $interviewTime = '';
+        // }
+
+        $profileStatuses = $this->profileRepository->getProfileStatuses();
+        $branches = $this->profileRepository->getBranches();
+        // $channels = $this->profileRepository->getChannels();
+        // $universities = $this->profileRepository->getUniversities();
+        $jobs = $this->jobRepository->getJobWithSkillOnAddProfile();
+        if ($profile) {
+            return view('admin.profile.edit', [
+                'title'     => 'Edit Profile',
+                'profileStatuses' => $profileStatuses,
+                'jobs'      => $jobs,
+                'branches'    => $branches,
+                // 'channels'  => $channels,
+                // 'universities' => $universities,
+                'profile'        => $profile,
+                // 'interviewTime' => $interviewTime,
+                // 'interviewers' => $interviewers
+            ]);
+        } else {
+            return redirect()->back()->with('error', 'Profile not found!');;
+        }
+    }
+
+    public function update(UpdateProfileRequest $request, $id)
+    {
+        try {
+            $data = $request->all();
+            $profile = $this->profileRepository->find($id);
+            
+
+            $profileStatuses = $this->profileRepository->getProfileStatuses();
+            $branches = $this->profileRepository->getBranches();
+            // $channels = $this->profileRepository->getChannels();
+            // $universities = $this->profileRepository->getUniversities();
+            $jobs = $this->jobRepository->getJobWithSkillOnAddProfile();
+
+            $file = $request->file('fileUpload');
+            if ($file) {
+                $path_file = 'uploads/profile/';
+                //delete file old
+                $file_path = public_path($path_file . $profile->file);
+                if (File::exists($file_path))
+                    File::delete($file_path);
+
+                //Example :'  Nguyễn văn têN   '
+                //ucwords($data['name']) : Đầu mỗi từ viết Hoa -> '  Nguyễn Văn TêN   '
+                //reg_replace('/\s+/', '', $string) : Loại bỏ toàn bộ khảng trắng, tab -> 'Nguyễn Văn TêN'
+                //vn_str_filter($string) : Chuyển có dấu thành không dấu -> 'NguyenVanTeN'
+                //$file->getClientOriginalExtension() : lấy kiểu file (xlsx, doc, docx)
+                //Carbon::createFromFormat('Y_m_d\_His', $time)) : 2022_03_25_092530
+                $new_name_file = Carbon::now()->format('Y_m_d\_His') . '_' . $this->vn_str_filter(preg_replace('/\s+/', '', ucwords($data['name']))) . '.' . $file->getClientOriginalExtension();
+                $file->move($path_file, $new_name_file);
+                $data['file'] = $new_name_file;
+            } else {
+                $data['file'] = $profile->file;
+            }
+            //Update Profile
+            $profile =  $this->profileRepository->update($id, $data);
+            if ($profile) {
+                return redirect('/profile/'. $profile->id .'/edit')->with(['success' => 'Update Profile is successfully!',]);
+            } else {
+                return redirect('/profile/'. $profile->id .'/edit')->with(['error' => 'Update Profile has something wrong!',]);
+            }
+        } catch (Exception $e) {
+            return $e;
+        }
+    }
+
     /**
-     * Remove CV and Interview.
+     * Remove Profile and Interview.
      *
-     * @param  int  $cv_id
+     * @param  int  $profile_id
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)
     {
-        $interview = $this->cvRepository->getInterviewForCvId($id);
-        $cvForEmail = $this->cvForEmailRepo->getCvEmailForCvId($id);
+        $interview = $this->profileRepository->getInterviewForProfileId($id);
+        $profileForEmail = $this->profileForEmailRepo->getProfileEmailForProfileId($id);
        // dd($interview['onboard_date']);
-        // dd($cvForEmail);
+        // dd($profileForEmail);
         //delete file
-        $cv = $this->cvRepository->find($id);
-        $file = $cv->file;
-        //If Cv hasn't Interview and cvForEmail then delete only CV Else delete Interview and CV
-        if (!$interview && !$cvForEmail) {
-            $deleteCV = $this->cvRepository->delete($id);
+        $profile = $this->profileRepository->find($id);
+        $file = $profile->file;
+        //If profile hasn't Interview and profileForEmail then delete only profile Else delete Interview and profile
+        if (!$interview && !$profileForEmail) {
+            $deleteProfile = $this->profileRepository->delete($id);
             if ($file) {
-                $path_file = 'uploads/cv/';
-                $file_path = public_path($path_file . $cv->file);
+                $path_file = 'uploads/profile/';
+                $file_path = public_path($path_file . $profile->file);
                 if (File::exists($file_path))
                     File::delete($file_path);
             }
-            if ($deleteCV) {
-                return redirect()->back()->with(['success' => 'Delete CV is successfully!']);
+            if ($deleteProfile) {
+                return redirect()->back()->with(['success' => 'Delete Profile is successfully!']);
             } else {
-                return redirect()->back()->with(['error' => 'The CV has been deleted or has something wrong!']);
+                return redirect()->back()->with(['error' => 'The Profile has been deleted or has something wrong!']);
             }
         } else {
 
-            if ($cvForEmail) {
-                $deleteCvForEmail = $this->cvForEmailRepo->delete($cvForEmail->id);
+            if ($profileForEmail) {
+                $deleteProfileForEmail = $this->profileForEmailRepo->delete($profileForEmail->id);
             }
 
             //Return error exits interviewed when delete interview time
             if (isset($interview['onboard_date'])) {
-                return redirect()->back()->with(['error' => 'The CV has been interviewed!']);
+                return redirect()->back()->with(['error' => 'The Profile has been interviewed!']);
             }
 
             if(isset($interview['id'])){
                 $deleteInterview = $this->interviewRepo->deleteAll($interview['id']);
             }
             
-            $deleteCV = $this->cvRepository->delete($id);
+            $deleteProfile = $this->profileRepository->delete($id);
             if ($file) {
-                $path_file = 'uploads/cv/';
-                $file_path = public_path($path_file . $cv->file);
+                $path_file = 'uploads/profile/';
+                $file_path = public_path($path_file . $profile->file);
                 if (File::exists($file_path))
                     File::delete($file_path);
             }
-            if ($deleteCV) {
-                return redirect()->back()->with(['success' => 'Delete CV is successfully!']);
+            if ($deleteProfile) {
+                return redirect()->back()->with(['success' => 'Delete Profile is successfully!']);
             } else {
-                return redirect()->back()->with(['error' => 'The CV has been deleted or has something wrong!']);
+                return redirect()->back()->with(['error' => 'The Profile has been deleted or has something wrong!']);
             }
         }
     }

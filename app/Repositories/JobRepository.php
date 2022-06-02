@@ -7,6 +7,7 @@ use App\Models\FormAnswerResponses;
 use App\Models\FormQuestionResponses;
 use App\Models\Jobs;
 use App\Models\JobStatuses;
+use App\Models\Profile;
 
 class JobRepository extends BaseRepository implements JobRepositoryInterface
 {
@@ -213,6 +214,20 @@ class JobRepository extends BaseRepository implements JobRepositoryInterface
   public function getJobWithSkillOnAddProfile()
   {
     return Jobs::with('Branches')->whereIn('job_status_id', [1, 2])->orderBy('request_date', 'DESC')->get();
+  }
+
+  /**
+   * Check job has CV
+   * @return bool
+   */
+  public function checkJobHasProfile($job_id)
+  {
+    $profile = Profile::where('job_id', $job_id)->first();
+    if ($profile) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
 }

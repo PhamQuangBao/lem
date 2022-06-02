@@ -252,4 +252,24 @@ class ProfileRepository extends BaseRepository implements ProfileRepositoryInter
         }
         return false;
     }
+
+    public function findFiles($id)
+    {
+        $files = Files::where('profile_id', '=', $id)->get();
+
+        return $files;
+    }
+
+    // public function deleteFile($id)
+    // {
+    //     $result = Files::find($id);
+
+    //     if ($result) {
+    //         $result->delete();
+
+    //         return true;
+    //     }
+
+    //     return false;
+    // }
 }

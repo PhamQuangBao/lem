@@ -10,6 +10,7 @@ use App\Repositories\ProfileRepositoryInterface;
 use Carbon\Carbon;
 use File;
 use Exception;
+use Illuminate\Http\File as HttpFile;
 use Illuminate\Http\Request;
 
 class ProfileController extends Controller
@@ -206,25 +207,23 @@ class ProfileController extends Controller
             // $universities = $this->profileRepository->getUniversities();
             $jobs = $this->jobRepository->getJobWithSkillOnAddProfile();
 
-            $file = $request->file('fileUpload');
-            if ($file) {
-                $path_file = 'uploads/profile/';
-                //delete file old
-                $file_path = public_path($path_file . $profile->file);
-                if (File::exists($file_path))
-                    File::delete($file_path);
-
-                //Example :'  Nguyễn văn têN   '
-                //ucwords($data['name']) : Đầu mỗi từ viết Hoa -> '  Nguyễn Văn TêN   '
-                //reg_replace('/\s+/', '', $string) : Loại bỏ toàn bộ khảng trắng, tab -> 'Nguyễn Văn TêN'
-                //vn_str_filter($string) : Chuyển có dấu thành không dấu -> 'NguyenVanTeN'
-                //$file->getClientOriginalExtension() : lấy kiểu file (xlsx, doc, docx)
-                //Carbon::createFromFormat('Y_m_d\_His', $time)) : 2022_03_25_092530
-                $new_name_file = Carbon::now()->format('Y_m_d\_His') . '_' . $this->vn_str_filter(preg_replace('/\s+/', '', ucwords($data['name']))) . '.' . $file->getClientOriginalExtension();
-                $file->move($path_file, $new_name_file);
-                $data['file'] = $new_name_file;
-            } else {
-                $data['file'] = $profile->file;
+            $files = $request->file('fileUpload');
+            if ($files) {
+                foreach($files as $key => $file){
+                    $dataFile['profile_id'] = $profile->id;
+                    //Example :'  Nguyễn văn têN   '
+                    //ucwords($data['name']) : Đầu mỗi từ viết Hoa -> '  Nguyễn Văn TêN   '
+                    //reg_replace('/\s+/', '', $string) : Loại bỏ toàn bộ khảng trắng, tab -> 'Nguyễn Văn TêN'
+                    //vn_str_filter($string) : Chuyển có dấu thành không dấu -> 'NguyenVanTeN'
+                    //$file->getClientOriginalExtension() : lấy kiểu file (xlsx, doc, docx)
+                    //Carbon::createFromFormat('Y_m_d\_His', $time)) : 2022_03_25_092530
+                    $new_name_file = Carbon::now()->format('Y_m_d\_His') . '_' . $this->vn_str_filter(preg_replace('/\s+/', '', ucwords($data['name']))) . '.' . $file->getClientOriginalExtension();
+                    $path_file = 'uploads/profile/';
+                    $file->move($path_file, $new_name_file);
+                    $dataFile['name'] = $file->getClientOriginalName();
+                    $dataFile['file'] = $new_name_file;
+                    $this->profileRepository->storeFile($dataFile);
+                }
             }
             //Update Profile
             $profile =  $this->profileRepository->update($id, $data);
@@ -246,54 +245,74 @@ class ProfileController extends Controller
      */
     public function destroy($id)
     {
-        $interview = $this->profileRepository->getInterviewForProfileId($id);
-        $profileForEmail = $this->profileForEmailRepo->getProfileEmailForProfileId($id);
+        // $interview = $this->profileRepository->getInterviewForProfileId($id);
+        // $profileForEmail = $this->profileForEmailRepo->getProfileEmailForProfileId($id);
        // dd($interview['onboard_date']);
         // dd($profileForEmail);
         //delete file
         $profile = $this->profileRepository->find($id);
-        $file = $profile->file;
-        //If profile hasn't Interview and profileForEmail then delete only profile Else delete Interview and profile
-        if (!$interview && !$profileForEmail) {
-            $deleteProfile = $this->profileRepository->delete($id);
-            if ($file) {
-                $path_file = 'uploads/profile/';
-                $file_path = public_path($path_file . $profile->file);
+        $files = $this->profileRepository->findFiles($id);
+        // $file[0]->delete();
+        // dd($this->profileRepository->findFiles($id));
+        
+        
+        if ($files) {
+            $path_file = 'uploads/profile/';
+            foreach($files as $file){
+                $file_path = public_path($path_file . $file->name);
                 if (File::exists($file_path))
                     File::delete($file_path);
-            }
-            if ($deleteProfile) {
-                return redirect()->back()->with(['success' => 'Delete Profile is successfully!']);
-            } else {
-                return redirect()->back()->with(['error' => 'The Profile has been deleted or has something wrong!']);
-            }
-        } else {
-
-            if ($profileForEmail) {
-                $deleteProfileForEmail = $this->profileForEmailRepo->delete($profileForEmail->id);
-            }
-
-            //Return error exits interviewed when delete interview time
-            if (isset($interview['onboard_date'])) {
-                return redirect()->back()->with(['error' => 'The Profile has been interviewed!']);
-            }
-
-            if(isset($interview['id'])){
-                $deleteInterview = $this->interviewRepo->deleteAll($interview['id']);
+                $file->delete();
             }
             
-            $deleteProfile = $this->profileRepository->delete($id);
-            if ($file) {
-                $path_file = 'uploads/profile/';
-                $file_path = public_path($path_file . $profile->file);
-                if (File::exists($file_path))
-                    File::delete($file_path);
-            }
-            if ($deleteProfile) {
-                return redirect()->back()->with(['success' => 'Delete Profile is successfully!']);
-            } else {
-                return redirect()->back()->with(['error' => 'The Profile has been deleted or has something wrong!']);
-            }
         }
+        $deleteProfile = $this->profileRepository->delete($id);
+        if ($deleteProfile) {
+            return redirect()->back()->with(['success' => 'Delete Profile is successfully!']);
+        } else {
+            return redirect()->back()->with(['error' => 'The Profile has been deleted or has something wrong!']);
+        }
+        //If profile hasn't Interview and profileForEmail then delete only profile Else delete Interview and profile
+        // if (!$interview && !$profileForEmail) {
+        //     $deleteProfile = $this->profileRepository->delete($id);
+        //     if ($file) {
+        //         $path_file = 'uploads/profile/';
+        //         $file_path = public_path($path_file . $profile->file);
+        //         if (File::exists($file_path))
+        //             File::delete($file_path);
+        //     }
+        //     if ($deleteProfile) {
+        //         return redirect()->back()->with(['success' => 'Delete Profile is successfully!']);
+        //     } else {
+        //         return redirect()->back()->with(['error' => 'The Profile has been deleted or has something wrong!']);
+        //     }
+        // } else {
+
+        //     if ($profileForEmail) {
+        //         $deleteProfileForEmail = $this->profileForEmailRepo->delete($profileForEmail->id);
+        //     }
+
+        //     //Return error exits interviewed when delete interview time
+        //     if (isset($interview['onboard_date'])) {
+        //         return redirect()->back()->with(['error' => 'The Profile has been interviewed!']);
+        //     }
+
+        //     if(isset($interview['id'])){
+        //         $deleteInterview = $this->interviewRepo->deleteAll($interview['id']);
+        //     }
+            
+        //     $deleteProfile = $this->profileRepository->delete($id);
+        //     if ($file) {
+        //         $path_file = 'uploads/profile/';
+        //         $file_path = public_path($path_file . $profile->file);
+        //         if (File::exists($file_path))
+        //             File::delete($file_path);
+        //     }
+        //     if ($deleteProfile) {
+        //         return redirect()->back()->with(['success' => 'Delete Profile is successfully!']);
+        //     } else {
+        //         return redirect()->back()->with(['error' => 'The Profile has been deleted or has something wrong!']);
+        //     }
+        // }
     }
 }

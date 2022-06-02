@@ -349,6 +349,34 @@ class JobController extends Controller
     }
 
     /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        $checkHasProfile = $this->jobRepository->checkJobHasProfile($id);
+        if (!$checkHasProfile) {
+            $checkHasResponses = $this->jobRepository->checkJobHasQuestionResponses($id);
+            if ($checkHasResponses) {
+                $listAnswerResponses = $this->jobRepository->getAnswerResponsesByQuestionId($checkHasResponses->id);
+                foreach ($listAnswerResponses as $answerResponses) {
+                    $answerResponses->delete();
+                }
+                $checkHasResponses->delete();
+            }
+            $job = $this->jobRepository->delete($id);
+            if ($job) {
+                return redirect()->back()->with(['success' => 'Delete job is successfully!']);
+            } else {
+                return redirect()->back()->with(['error' => 'The Job has been deleted or has something wrong!']);
+            }
+        }
+        return redirect()->back()->with(['error' => "Can't delete job, because This job has a profile!"]);
+    }
+
+    /**
      * check string channel
      * @return array['id'=> $idChannel, 'name'=> $channelName]
      */

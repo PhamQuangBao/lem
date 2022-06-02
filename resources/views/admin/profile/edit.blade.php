@@ -189,7 +189,7 @@
                 </div>
                 <div class="col-md-4" style="float:left">
                     <label>@if($profile->file)<a href="{{asset('/uploads/profile/'.$profile->file)}}"> {{$profile->file}} </a>@endif</label>
-                    <input type="file" class="form-control col-xs-9" name="fileUpload" id="fileUpload" placeholder="import file(.doc, .docx, .pdf, .ipeg, .png)">
+                    <input type="file" class="form-control col-xs-9" name="fileUpload[]" id="fileUpload" placeholder="import file(.doc, .docx, .pdf, .ipeg, .png)" multiple>
                 </div>
                 <div style="float:left; margin:0 20px 0 0; padding-top: 10px">
                     (.doc, .docx, .pdf, .xlsx, .ipeg, .jpg, .png)

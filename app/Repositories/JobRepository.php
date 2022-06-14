@@ -230,4 +230,13 @@ class JobRepository extends BaseRepository implements JobRepositoryInterface
     }
   }
 
+  /**
+   * Get All branches
+   * @return App\Models\Branches
+   */
+  public function getBranches()
+  {
+    return Branches::all();
+  }
+
 }

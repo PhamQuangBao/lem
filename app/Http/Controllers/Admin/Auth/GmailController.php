@@ -47,42 +47,44 @@ class GmailController extends Controller
         ]);
     }
 
-    public function listCV(Request $request)
+    public function listProfile(Request $request)
     {
         $data = $request->all();
 
         //Get $dateFrom = $aRanges[0] and $dateTo[1] = $aRanges[1]
         $aRanges = explode(' - ', $data['dateRange']);
+        $aRanges[1] = Carbon::parse($aRanges[1])->addDay()->format('Y-m-d');
 
         $jobs_status_opens = $this->jobRepository->getJobWithStatusOpen();
-        $skills = $this->jobRepository->getSkills();
-        foreach ($skills as $skill) {
-            $skillNames[$skill->id] =  $skill->name;
+        $branches = $this->jobRepository->getBranches();
+        foreach ($branches as $branch) {
+            $branchNames[$branch->id] =  $branch->name;
         }
 
         if (LaravelGmail::check()) {
-            $mailAlls = (LaravelGmail::message()->in(env('GOOGLE_GET_GMAIL_LABEL'))->after($aRanges[0])->all($pageToken = null));
+            $mailAlls = (LaravelGmail::message()->in(env('profile'))->after($aRanges[0])->before($aRanges[1])->all($pageToken = null));
+            // dd($mailAlls);
             if (count($mailAlls) > 0) {
                 foreach ($mailAlls as $key => $mailAll) {
                     $mail = LaravelGmail::message()->get($mailAll->id);
                     $mailIDs[] = $mail->getId();
                     $timeSends[] = $mail->getDate();
                     $subjects[$key] = $mail->getSubject();
-                    //param: [CCVN]-Apply for ... *skill name*
-                    //get *kill name* -> skill_id -> job_id has status open, skill_id, lasted
+                    //param: [CprofileN]-Apply for ... *branch name*
+                    //get *kill name* -> branch_id -> job_id has status open, branch_id, lasted
                     //return: job_id
 
                     $jobID = 1;
                     $jobKey = '00-00';
-                    foreach ($skillNames as $skillID => $skillName) {
-                        $pos = strpos($subjects[$key], $skillName);
+                    foreach ($branchNames as $branchID => $branchName) {
+                        $pos = strpos($subjects[$key], $branchName);
                         if ($pos !== false) {
-                            // dd($skillID);
-                            //$skillID[] = $skillID;
+                            // dd($branchID);
+                            //$branchID[] = $branchID;
                             foreach ($jobs_status_opens as $jobs_status_open) {
-                                // dd($jobs_status_open->skill_id);
-                                // dd($skillID);
-                                if ($jobs_status_open->skill_id == $skillID) {
+                                // dd($jobs_status_open->branch_id);
+                                // dd($branchID);
+                                if ($jobs_status_open->branch_id == $branchID) {
                                     $jobID = $jobs_status_open->id;
                                     $jobKey = $jobs_status_open->key;
                                     break;
@@ -126,14 +128,14 @@ class GmailController extends Controller
                 }
 
 
-                //Check Email exits in CV
-                $emailsCV = $this->cvRepository->getEmailsCV();
-                if (isset($emailsCV) && isset($fromMails)) {
+                //Check Email exits in Profile
+                $emailsProfile = $this->profileRepository->getEmailsProfile();
+                if (isset($emailsProfile) && isset($fromMails)) {
                     // chuyen mang 2 chieu thanh 1 chieu array[][] -> array[]
-                    $emailsCV = array_column($emailsCV, 'mail');
-                    //so sanh array[], return 0 if $mailFromMails is exit $emailsCV
+                    $emailsProfile = array_column($emailsProfile, 'mail');
+                    //so sanh array[], return 0 if $mailFromMails is exit $emailsProfile
                     foreach ($fromMails as $key => $fromMail) {
-                        if (in_array($fromMail, $emailsCV))
+                        if (in_array($fromMail, $emailsProfile))
                             $statuses[$key] = 0;
                     }
                 }
@@ -171,7 +173,7 @@ class GmailController extends Controller
                     }
                 }
 
-                return view('admin.gmail.list-cv', [
+                return view('admin.gmail.list-profile', [
                     'title' => 'Get Gmail',
                     'mailIDs' => $mailIDs,
                     'timeSends' => $timeSends,
@@ -222,17 +224,17 @@ class GmailController extends Controller
         $numAttachments = unserialize($request->numAttachments);
         $statuses = unserialize($request->statuses);
 
-        //Check Email exits in CV
-        $emailsCV = $this->cvRepository->getEmailsCV();
+        //Check Email exits in Profile
+        $emailsProfile = $this->profileRepository->getEmailsProfile();
         // chuyen mang 2 chieu thanh 1 chieu array[][] -> array[]
-        $emailsCV = array_column($emailsCV, 'mail');
+        $emailsProfile = array_column($emailsProfile, 'mail');
         //get Mail for MailID
         foreach ($mailIDs as $key => $mailID) {
             if (in_array($mailID, $selectMailIDs)) {
                 $selectMails[] =  $fromMails[$key];
             }
         }
-
+        
         //Check count value return Error!
         $countMails = array_count_values($selectMails);
         foreach ($countMails as $key => $countMail) {
@@ -245,72 +247,75 @@ class GmailController extends Controller
                 ]);
             }
         }
-
+        
         //check mail for gmail is exits
-        $cvForEmailAlls =  $this->cvForEmailRepository->getAll();
-        if (count($cvForEmailAlls) > 0) {
-            foreach ($cvForEmailAlls as $cvForEmailAll) {
-                if (isset($cvForEmailAll->email_id) && in_array($cvForEmailAll->email_id, $selectMailIDs)) {
+        $profileForEmailAlls =  $this->profileForEmailRepository->getAll();
+        
+        if (count($profileForEmailAlls) > 0) {
+            foreach ($profileForEmailAlls as $profileForEmailAll) {
+                if (isset($profileForEmailAll->email_id) && in_array($profileForEmailAll->email_id, $selectMailIDs)) {
                     return view('admin.gmail.home', [
                         'title' => 'Get Gmail',
                         'dateRange' => $data['dateRange'],
-                        'error' => 'Error! Have email is added: '. $cvForEmailAll->form_email .' !',
+                        'error' => 'Error! Have email is added: '. $profileForEmailAll->form_email .' !',
                     ]);
                 }
             }
         }
 
         
-
-        // $cvForEmails[][] ;
+        
+        // $profileForEmails[][] ;
         $i = 0;
         //  foreach ($statuses as $key => $status) {
         foreach ($mailIDs as $key => $mailID) {
             //Check mail has checked and not attachment
             if (in_array($mailID, $selectMailIDs) && ($statuses[$key] != 3)) {
 
-                // check array[] email, return 0 if $mailFromMails is exit $emailsCV and delete email old or remove history
+                // check array[] email, return 0 if $mailFromMails is exit $emailsProfile and delete email old or remove history
                 // dd($selectMailIDs);
                 foreach ($fromMails as $fromMail) {
-                    if (in_array($fromMail, $emailsCV)) {
-                        $cvLast =  $this->cvRepository->getCvForEmailsLast($fromMail);
-                        if(isset($cvLast->id)){
-                            $interviewLast = $this->cvRepository->getInterviewForCvId($cvLast->id);
-                            $dataCVHistory = [
-                                'cv_data' => json_encode($cvLast),
-                                'mail' => $cvLast->mail,
-                                'interview_data' => json_encode($interviewLast),
+                    if (in_array($fromMail, $emailsProfile)) {
+                        $profileLast =  $this->profileRepository->getProfileForEmailsLast($fromMail);
+                        if(isset($profileLast->id)){
+                            // $interviewLast = $this->profileRepository->getInterviewForProfileId($profileLast->id);
+                            $dataProfileHistory = [
+                                'profile_data' => json_encode($profileLast),
+                                'mail' => $profileLast->mail,
+                                // 'interview_data' => json_encode($interviewLast),
                             ];
-                            $cvHistory = $this->cvHistoryRepo->create($dataCVHistory);
-                            //delete cv and interview
-                            if(isset($interviewLast)){
-                                $interviewLast->delete();
-                            }
-                            $cvLast->delete();
+                            $profileHistory = $this->profileHistoryRepo->create($dataProfileHistory);
+                            //delete profile and interview
+                            // if(isset($interviewLast)){
+                            //     $interviewLast->delete();
+                            // }
+                            $profileLast->delete();
                         }
-                        $cvLast = array();
+                        $profileLast = array();
                     }
                 }
-                $cvForEmails[$i]['jobIDs'] = $jobIDs[$key];
-                $cvForEmails[$i]['mailIDs'] = $mailIDs[$key];
-                $cvForEmails[$i]['fromMails'] = $fromMails[$key];
-                $cvForEmails[$i]['timeSends'] = $timeSends[$key];
-                $cvForEmails[$i]['fromNames'] = $fromNames[$key];
-                $cvForEmails[$i]['subjects'] = $subjects[$key];
-                $cvForEmails[$i]['phones'] = $phones[$key];
-                $cvForEmails[$i]['numAttachments'] = $numAttachments[$key];
+                $profileForEmails[$i]['jobIDs'] = $jobIDs[$key];
+                $profileForEmails[$i]['mailIDs'] = $mailIDs[$key];
+                $profileForEmails[$i]['fromMails'] = $fromMails[$key];
+                $profileForEmails[$i]['timeSends'] = $timeSends[$key];
+                $profileForEmails[$i]['fromNames'] = $fromNames[$key];
+                $profileForEmails[$i]['subjects'] = $subjects[$key];
+                $profileForEmails[$i]['phones'] = $phones[$key];
+                $profileForEmails[$i]['numAttachments'] = $numAttachments[$key];
 
                 $mail = LaravelGmail::message()->get($mailIDs[$key]);
                 //Get name file
                 $typeFile = pathinfo($mail->getAttachments()[0]->getFileName())['extension'];
-                $new_name_file = Carbon::now()->format('Y_m_d\_His') . '_' . CvController::vn_str_filter(preg_replace('/\s+/', '', ucwords($fromNames[$key]))) . '.' . $typeFile;
-                $cvForEmails[$i]['file'] = $new_name_file;
-
+                $new_name_file = Carbon::now()->format('Y_m_d\_His') . '_' . $this->vn_str_filter(preg_replace('/\s+/', '', ucwords(substr($fromNames[$key], 1, strlen($fromNames[$key]) - 2)))) . '.' . $typeFile;
+                $profileForEmails[$i]['file'] = $new_name_file;
                 $sizeFile = $mail->getAttachments()[0]->getSize();
                 //If size file < 20 MB then save file
+                
                 if ($sizeFile < 20000000) {
-                    //save CV at public/uploads/cv
-                    $mail->getAttachments()[0]->saveAttachmentTo($path = 'uploads/cv', $filename = $new_name_file, $disk = 'public');
+                    //save Profile at public/uploads/profile
+                    
+                    $mail->getAttachments()[0]->saveAttachmentTo($path = 'uploads/profile', $filename = $new_name_file, $disk = 'public');
+                    // dd($mail->getAttachments()[0]->saveAttachmentTo($path = 'uploads/profile', $filename = $new_name_file, $disk = 'public'));
                 } else {
                     return view('admin.gmail.home', [
                         'title' => 'Get Gmail',
@@ -319,28 +324,57 @@ class GmailController extends Controller
                     ]);
                 }
 
-                $cvForEmails[$i] = (object) $cvForEmails[$i];
+                $profileForEmails[$i] = (object) $profileForEmails[$i];
                 $i++;
             }
         }
-
-        $cv = 0;
-        //Store CV and CV For Email
-        if (count($cvForEmails) > 0) {
-            $cv =  $this->cvForEmailRepository->storeCvForEmails($cvForEmails);
+        
+        $profile = 0;
+        //Store Profile and Profile For Email
+        if (count($profileForEmails) > 0) {
+            $profile =  $this->profileForEmailRepository->storeProfileForEmails($profileForEmails);
         }
-        if ($cv > 0) {
+        if ($profile > 0) {
             return view('admin.gmail.home', [
                 'title' => 'Get Gmail',
                 'dateRange' => $data['dateRange'],
-                'success' => 'Have ' . $cv . ' added new CV is successfully!',
+                'success' => 'Have ' . $profile . ' added new Profile is successfully!',
             ]);
         } else {
             return view('admin.gmail.home', [
                 'title' => 'Get Gmail',
                 'dateRange' => $data['dateRange'],
-                'error' => 'Error! Add new CV has something wrong!',
+                'error' => 'Error! Add new Profile has something wrong!',
             ]);
         }
+    }
+
+    /** Filter String vn to English
+     * @param: string
+     * @return: string
+     * Example: 'Trần vĂn Tên' -> 'Tran vAn Ten';
+     */
+    public function vn_str_filter($str)
+    {
+        $unicode = array(
+            'a' => 'á|à|ả|ã|ạ|ă|ắ|ặ|ằ|ẳ|ẵ|â|ấ|ầ|ẩ|ẫ|ậ',
+            'd' => 'đ',
+            'e' => 'é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ',
+            'i' => 'í|ì|ỉ|ĩ|ị',
+            'o' => 'ó|ò|ỏ|õ|ọ|ô|ố|ồ|ổ|ỗ|ộ|ơ|ớ|ờ|ở|ỡ|ợ',
+            'u' => 'ú|ù|ủ|ũ|ụ|ư|ứ|ừ|ử|ữ|ự',
+            'y' => 'ý|ỳ|ỷ|ỹ|ỵ',
+            'A' => 'Á|À|Ả|Ã|Ạ|Ă|Ắ|Ặ|Ằ|Ẳ|Ẵ|Â|Ấ|Ầ|Ẩ|Ẫ|Ậ',
+            'D' => 'Đ',
+            'E' => 'É|È|Ẻ|Ẽ|Ẹ|Ê|Ế|Ề|Ể|Ễ|Ệ',
+            'I' => 'Í|Ì|Ỉ|Ĩ|Ị',
+            'O' => 'Ó|Ò|Ỏ|Õ|Ọ|Ô|Ố|Ồ|Ổ|Ỗ|Ộ|Ơ|Ớ|Ờ|Ở|Ỡ|Ợ',
+            'U' => 'Ú|Ù|Ủ|Ũ|Ụ|Ư|Ứ|Ừ|Ử|Ữ|Ự',
+            'Y' => 'Ý|Ỳ|Ỷ|Ỹ|Ỵ',
+        );
+        foreach ($unicode as $nonUnicode => $uni) {
+            $str = preg_replace("/($uni)/i", $nonUnicode, $str);
+        }
+        return $str;
     }
 }

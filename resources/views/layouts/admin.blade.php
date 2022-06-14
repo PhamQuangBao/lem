@@ -133,7 +133,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="/profile/gmail" class="nav-link {{ (request()->is('/profile/gmail*')) ? 'active' : '' }}">
+                                    <a href="/profile/gmail" class="nav-link {{ (request()->is('profile/gmail*')) ? 'active' : '' }}">
                                         &emsp;<i class="fas fa-file-import nav-icon"></i>
                                         <p>Import Profile</p>
                                     </a>

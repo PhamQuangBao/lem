@@ -36,7 +36,7 @@ Route::group(['prefix' => 'profile/gmail', 'middleware' => 'auth'], function () 
     Route::post('/list-profile', [GmailController::class, 'listProfile']);
     Route::get('/get/newest', [GmailController::class, 'getGmailNewest']);
     Route::post('/store', [GmailController::class, 'store']);
-   // Route::get('/list-profile', [GmailController::class, 'listCV']);
+    // Route::get('/list-profile', [GmailController::class, 'listCV']);
     
     Route::get('/oauth/gmail/callback', function (){
         LaravelGmail::makeToken();
@@ -49,7 +49,7 @@ Route::group(['prefix' => 'profile/gmail', 'middleware' => 'auth'], function () 
     });
 });
 
-Route::group(['prefix' => 'jobs', 'middleware' => 'auth'], function () {
+Route::group(['prefix' => 'jobs', 'middleware' => 'auth.role: 1, 2'], function () {
     Route::get('/add', [JobController::class, 'add']);
     Route::post('/store', [JobController::class, 'store'])->name('admin.jobs.store');
     Route::get('list', [JobController::class, 'list']);

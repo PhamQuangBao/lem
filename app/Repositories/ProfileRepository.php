@@ -260,16 +260,30 @@ class ProfileRepository extends BaseRepository implements ProfileRepositoryInter
         return $files;
     }
 
-    // public function deleteFile($id)
-    // {
-    //     $result = Files::find($id);
+    /**
+     * Get All Email Profile
+     * 
+     * @return array emailProfile
+     */
+    public function getEmailsProfile()
+    {
+        //job status open with id = 1
+        $emails = Profile::select('mail')->orderBy('created_at', 'DESC')->get()->toArray();
+        return $emails;
+    }
 
-    //     if ($result) {
-    //         $result->delete();
-
-    //         return true;
-    //     }
-
-    //     return false;
-    // }
+    /**
+     * Get last Profile for email
+     * 
+     * @return array information Profile
+     */
+    public function getProfileForEmailsLast($mail)
+    {
+        //job status open with id = 1
+        $profile = Profile::where('mail', $mail)->orderBy('id', 'desc')->first();
+        if($profile){
+            return $profile;
+        }
+        return false;
+    }
 }

@@ -35,10 +35,10 @@ class ProfileForEmailRepository extends BaseRepository implements ProfileForEmai
                     'name' => $data->fromNames,
                     'phone_number' => $data->phones,
                     'mail' => $data->fromMails,
-                    'file' => $data->file,
-                    'channel_id' => 8, //Unknown
-                    'profile_status_id' => 1, //Wait for CV screening
-                    'university_id' => 1, //Other,
+                    // 'file' => $data->file,
+                    // 'channel_id' => 8, //Unknown
+                    'profile_status_id' => 1, //Wait for Profile screening
+                    // 'university_id' => 1, //Other,
                     'note' => $data->subjects,
                 ));
                 $profile->save();

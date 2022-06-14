@@ -19,7 +19,7 @@
 @endsection
 @extends('layouts.admin')
 @section('content')
-<form class="p-4 border bg-light" action="/cv/gmail/list-cv" method="post">
+<form class="p-4 border bg-light" action="/profile/gmail/list-profile" method="post">
   @csrf
   <div class="row">
     <div class="col-md-6">
@@ -29,9 +29,9 @@
           @if(LaravelGmail::check())
           <h4>{{ LaravelGmail::user(); }}</h4>
           &emsp;
-          <a href="{{ url('cv/gmail/oauth/gmail/logout') }}"><button type="button" class="btn btn-warning">logout</button></a>
+          <a href="{{ url('profile/gmail/oauth/gmail/logout') }}"><button type="button" class="btn btn-warning">logout</button></a>
           @else
-          <a href="{{ url('cv/gmail/oauth/gmail') }}"><button type="button" class="btn btn-primary">login</button></a>
+          <a href="{{ url('profile/gmail/oauth/gmail') }}"><button type="button" class="btn btn-primary">login</button></a>
           @endif
         </div>
       </div>
@@ -59,11 +59,11 @@
   <div class="row">
     <div class="col text-center">
       @if(LaravelGmail::check())
-      <button id="submits" type="submit" class="btn btn-primary">Get CV</button>
+      <button id="submits" type="submit" class="btn btn-primary">Get Profile</button>
       @else
-      <button id="submits" type="submit" class="btn btn-primary" disabled>Get CV</button>
+      <button id="submits" type="submit" class="btn btn-primary" disabled>Get Profile</button>
       @endif
-      <a type="button" href="/cv/gmail" class="btn btn-default">Cancel</a>
+      <a type="button" href="/profile/gmail" class="btn btn-default">Cancel</a>
     </div>
   </div><!-- /.row -->
 </form>
@@ -71,7 +71,7 @@
 
 <div class="card">
   <div class="card-header">
-    <h3 class="card-title">List CV for email</h3>
+    <h3 class="card-title">List Profile for email</h3>
     <div style="float:left; margin-left:40%">
       <a class="btn" style="background-color:antiquewhite">
         <i></i>
@@ -149,7 +149,7 @@
       @else
       <button id="submits" type="submit" class="btn btn-primary" disabled>Save</button>
       @endif
-      <a type="button" href="/cv/gmail/list-cv" class="btn btn-default">Cancel</a>
+      <a type="button" href="/profile/gmail/list-profile" class="btn btn-default">Cancel</a>
     </div>
   </form>
 </div>

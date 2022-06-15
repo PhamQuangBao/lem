@@ -1,6 +1,7 @@
 @section('header')
 <!-- daterange picker -->
 <link rel="stylesheet" href="/template/admin/plugins/daterangepicker/daterangepicker.css">
+<link rel="stylesheet" href="/template/admin/plugins/bootstrap-slider/css/bootstrap-slider.min.css">
 @endsection
 @extends('layouts.admin')
 @section('content')
@@ -55,6 +56,12 @@
             </div>
         </div>
 
+        <div class="row margin">
+            <div class="slider-red">
+                <input type="text" value="-9,9" class="slider form-control" data-slider-min="-9" data-slider-max="9" data-slider-step="0.1" data-slider-value="[0,0]" data-slider-orientation="horizontal" data-slider-selection="before" data-slider-tooltip="show" data-value="-9,9" style="display: none;">
+            </div>
+        </div>
+
         <div class="row">
             <div class="col text-center">
                 @if(LaravelGmail::check())
@@ -64,7 +71,7 @@
                 @endif
                 <a type="button" href="/profile/gmail" class="btn btn-default">Cancel</a>
             </div>
-        </div><!-- /.row -->
+        </div>
     </form>
 </div>
 <p></p>
@@ -72,8 +79,12 @@
 @section('footer')
 <!-- date-range-picker -->
 <script src="/template/admin/plugins/daterangepicker/daterangepicker.js"></script>
+<script src="/template/admin/plugins/ion-rangeslider/js/ion.rangeSlider.min.js"></script>
+<script src="/template/admin/plugins/bootstrap-slider/bootstrap-slider.min.js"></script>
 <script>
     $(function() {
+        /* BOOTSTRAP SLIDER */
+        $('.slider').bootstrapSlider()
         //Date range picker
         $('#reservation').daterangepicker();
     });

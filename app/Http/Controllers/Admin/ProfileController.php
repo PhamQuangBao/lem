@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProfileRequest;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Repositories\JobRepositoryInterface;
+use App\Repositories\ProfileForEmailRepositoryInterface;
 use App\Repositories\ProfileRepositoryInterface;
 use Carbon\Carbon;
 use File;
@@ -21,9 +22,11 @@ class ProfileController extends Controller
     public function __construct(
         ProfileRepositoryInterface $profileRepository,
         JobRepositoryInterface $jobRepository,
+        ProfileForEmailRepositoryInterface $profileForEmailRepo
     ) {
         $this->profileRepository = $profileRepository;
         $this->jobRepository = $jobRepository;
+        $this->profileForEmailRepo = $profileForEmailRepo;
     }
 
     public function add()
@@ -246,73 +249,71 @@ class ProfileController extends Controller
     public function destroy($id)
     {
         // $interview = $this->profileRepository->getInterviewForProfileId($id);
-        // $profileForEmail = $this->profileForEmailRepo->getProfileEmailForProfileId($id);
+        $profileForEmail = $this->profileForEmailRepo->getProfileEmailForProfileId($id);
        // dd($interview['onboard_date']);
         // dd($profileForEmail);
         //delete file
         $profile = $this->profileRepository->find($id);
-        $files = $this->profileRepository->findFiles($id);
+        
         // $file[0]->delete();
         // dd($this->profileRepository->findFiles($id));
         
         
-        if ($files) {
-            $path_file = 'uploads/profile/';
-            foreach($files as $file){
-                $file_path = public_path($path_file . $file->name);
-                if (File::exists($file_path))
-                    File::delete($file_path);
-                $file->delete();
+        
+        // $deleteProfile = $this->profileRepository->delete($id);
+        // if ($deleteProfile) {
+        //     return redirect()->back()->with(['success' => 'Delete Profile is successfully!']);
+        // } else {
+        //     return redirect()->back()->with(['error' => 'The Profile has been deleted or has something wrong!']);
+        // }
+        //If profile hasn't Interview and profileForEmail then delete only profile Else delete Interview and profile
+        if (!$profileForEmail) {
+            $deleteProfile = $this->profileRepository->delete($id);
+            $files = $this->profileRepository->findFiles($id);
+            if ($files) {
+                foreach($files as $key => $file){
+                    $path_file = 'uploads/profile/';
+                    $file_path = public_path($path_file . $profile->file);
+                    if (File::exists($file_path))
+                        File::delete($file_path);
+                }
+            }
+            if ($deleteProfile) {
+                return redirect()->back()->with(['success' => 'Delete Profile is successfully!']);
+            } else {
+                return redirect()->back()->with(['error' => 'The Profile has been deleted or has something wrong!']);
+            }
+        } else {
+
+            if ($profileForEmail) {
+                $deleteProfileForEmail = $this->profileForEmailRepo->delete($profileForEmail->id);
+            }
+
+            $files = $this->profileRepository->findFiles($id);
+
+            if ($files) {
+                $path_file = 'uploads/profile/';
+                foreach($files as $file){
+                    $file_path = public_path($path_file . $file->name);
+                    if (File::exists($file_path))
+                        File::delete($file_path);
+                    $file->delete();
+                }
+                
             }
             
+            $deleteProfile = $this->profileRepository->delete($id);
+            // if ($file) {
+            //     $path_file = 'uploads/profile/';
+            //     $file_path = public_path($path_file . $profile->file);
+            //     if (File::exists($file_path))
+            //         File::delete($file_path);
+            // }
+            if ($deleteProfile) {
+                return redirect()->back()->with(['success' => 'Delete Profile is successfully!']);
+            } else {
+                return redirect()->back()->with(['error' => 'The Profile has been deleted or has something wrong!']);
+            }
         }
-        $deleteProfile = $this->profileRepository->delete($id);
-        if ($deleteProfile) {
-            return redirect()->back()->with(['success' => 'Delete Profile is successfully!']);
-        } else {
-            return redirect()->back()->with(['error' => 'The Profile has been deleted or has something wrong!']);
-        }
-        //If profile hasn't Interview and profileForEmail then delete only profile Else delete Interview and profile
-        // if (!$interview && !$profileForEmail) {
-        //     $deleteProfile = $this->profileRepository->delete($id);
-        //     if ($file) {
-        //         $path_file = 'uploads/profile/';
-        //         $file_path = public_path($path_file . $profile->file);
-        //         if (File::exists($file_path))
-        //             File::delete($file_path);
-        //     }
-        //     if ($deleteProfile) {
-        //         return redirect()->back()->with(['success' => 'Delete Profile is successfully!']);
-        //     } else {
-        //         return redirect()->back()->with(['error' => 'The Profile has been deleted or has something wrong!']);
-        //     }
-        // } else {
-
-        //     if ($profileForEmail) {
-        //         $deleteProfileForEmail = $this->profileForEmailRepo->delete($profileForEmail->id);
-        //     }
-
-        //     //Return error exits interviewed when delete interview time
-        //     if (isset($interview['onboard_date'])) {
-        //         return redirect()->back()->with(['error' => 'The Profile has been interviewed!']);
-        //     }
-
-        //     if(isset($interview['id'])){
-        //         $deleteInterview = $this->interviewRepo->deleteAll($interview['id']);
-        //     }
-            
-        //     $deleteProfile = $this->profileRepository->delete($id);
-        //     if ($file) {
-        //         $path_file = 'uploads/profile/';
-        //         $file_path = public_path($path_file . $profile->file);
-        //         if (File::exists($file_path))
-        //             File::delete($file_path);
-        //     }
-        //     if ($deleteProfile) {
-        //         return redirect()->back()->with(['success' => 'Delete Profile is successfully!']);
-        //     } else {
-        //         return redirect()->back()->with(['error' => 'The Profile has been deleted or has something wrong!']);
-        //     }
-        // }
     }
 }

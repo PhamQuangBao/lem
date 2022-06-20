@@ -104,7 +104,7 @@
                         @if (count($profile->files) > 0)
                             @for ($i = 0; $i < count($profile->files); $i++)
                                 <div class="row">
-                                    <a href="https://docs.google.com/viewer?url={{request()->getHost()}}/uploads/profile/{{ ($profile->files)[$i]->file }}" target="_blank">{{ ($profile->files)[$i]->file }}</a>
+                                    <a href={{ strpos(' .xlsx, .xls, .doc, .docx, .txt', substr(($profile->files)[$i]->file, strpos(($profile->files)[$i]->file, '.'))) ? "https://view.officeapps.live.com/op/embed.aspx?src=" . request()->getHost() . "/uploads/cv/" . ($profile->files)[$i]->file : "/uploads/cv/" . ($profile->files)[$i]->file}} target="_blank">{{ ($profile->files)[$i]->file }}</a>
                                 </div>
                                 @endfor
                         @else

@@ -62,7 +62,7 @@ class GmailController extends Controller
         }
 
         if (LaravelGmail::check()) {
-            $mailAlls = (LaravelGmail::message()->in(env('profile'))->after($aRanges[0])->before($aRanges[1])->all($pageToken = null));
+            $mailAlls = (LaravelGmail::message()->in(env('GOOGLE_GET_GMAIL_LABEL'))->after($aRanges[0])->before($aRanges[1])->all($pageToken = null));
             // dd($mailAlls);
             if (count($mailAlls) > 0) {
                 foreach ($mailAlls as $key => $mailAll) {
@@ -122,6 +122,23 @@ class GmailController extends Controller
                         $phones[] = $phoneMails[0];
                     } else {
                         $phones[] = '0000000000';
+                    }
+
+                    //Channels default is Other
+                    $channels[$key] = 1;
+                    //Email from ITviec 
+                    if (strpos($fromMails[$key], '@itviec.com') > 0) {
+                        $channels[$key] = 2;
+                        $mailCV = $this->getITViec($textBody);
+                        $fromNames[$key] = $mailCV[0];
+                        $fromMails[$key] = $mailCV[1];
+                        $phones[$key] = '0000000000';
+                    }
+
+                    if (strpos($fromMails[$key], '@vietnamworks.com.vn') > 0) {
+                        $channels[$key] = 5;
+                        $fromMails[$key] = $mailIDs[$key] . '@vietnamworks.com.vn';
+                        $phones[$key] = '0000000000';
                     }
 
                     $statuses[] = 1;
@@ -204,6 +221,30 @@ class GmailController extends Controller
     }
 
     /**
+     * Get Name, Email from IT viec
+     * @param string text Body Mail
+     * @return array mailCV[name, email]
+     */
+    public function getITViec($textBody)
+    {
+        $startName = strpos($textBody, 'Name', 0);
+        // ... Name: Trương Đình Giang\r\nEmail:... -> Trương Đình Giang
+        $stringName = substr($textBody, $startName + 6, 200);
+        $endLine = strpos($stringName, "\r\n", 0);
+        $stringName = substr($textBody, $startName + 6, $endLine);
+        $mailCV[0] = $stringName;
+
+        $startEmail = strpos($textBody, 'Email', 0);
+        // ... Email: giang@gmail.com\r\n:... -> giang@gmail.com
+        $stringEmail = substr($textBody, $startEmail + 7, 200);
+        $endLine = strpos($stringEmail, "\r\n", 0);
+        $stringEmail = substr($textBody, $startEmail + 7, $endLine);
+        $mailCV[1] = $stringEmail;
+
+        return $mailCV;
+    }
+
+    /**
      * Display a listing of the resource.
      * @param 
      *
@@ -248,20 +289,20 @@ class GmailController extends Controller
             }
         }
         
-        //check mail for gmail is exits
-        $profileForEmailAlls =  $this->profileForEmailRepository->getAll();
+        // //check mail for gmail is exits
+        // $profileForEmailAlls =  $this->profileForEmailRepository->getAll();
         
-        if (count($profileForEmailAlls) > 0) {
-            foreach ($profileForEmailAlls as $profileForEmailAll) {
-                if (isset($profileForEmailAll->email_id) && in_array($profileForEmailAll->email_id, $selectMailIDs)) {
-                    return view('admin.gmail.home', [
-                        'title' => 'Get Gmail',
-                        'dateRange' => $data['dateRange'],
-                        'error' => 'Error! Have email is added: '. $profileForEmailAll->form_email .' !',
-                    ]);
-                }
-            }
-        }
+        // if (count($profileForEmailAlls) > 0) {
+        //     foreach ($profileForEmailAlls as $profileForEmailAll) {
+        //         if (isset($profileForEmailAll->email_id) && in_array($profileForEmailAll->email_id, $selectMailIDs)) {
+        //             return view('admin.gmail.home', [
+        //                 'title' => 'Get Gmail',
+        //                 'dateRange' => $data['dateRange'],
+        //                 'error' => 'Error! Have email is added: '. $profileForEmailAll->form_email .' !',
+        //             ]);
+        //         }
+        //     }
+        // }
 
         
         
@@ -304,26 +345,36 @@ class GmailController extends Controller
                 $profileForEmails[$i]['numAttachments'] = $numAttachments[$key];
 
                 $mail = LaravelGmail::message()->get($mailIDs[$key]);
-                //Get name file
-                $typeFile = pathinfo($mail->getAttachments()[0]->getFileName())['extension'];
-                $new_name_file = Carbon::now()->format('Y_m_d\_His') . '_' . $this->vn_str_filter(preg_replace('/\s+/', '', ucwords(substr($fromNames[$key], 1, strlen($fromNames[$key]) - 2)))) . '.' . $typeFile;
-                $profileForEmails[$i]['file'] = $new_name_file;
-                $sizeFile = $mail->getAttachments()[0]->getSize();
-                //If size file < 20 MB then save file
-                
-                if ($sizeFile < 20000000) {
-                    //save Profile at public/uploads/profile
-                    
-                    $mail->getAttachments()[0]->saveAttachmentTo($path = 'uploads/profile', $filename = $new_name_file, $disk = 'public');
-                    // dd($mail->getAttachments()[0]->saveAttachmentTo($path = 'uploads/profile', $filename = $new_name_file, $disk = 'public'));
-                } else {
-                    return view('admin.gmail.home', [
-                        'title' => 'Get Gmail',
-                        'dateRange' => $data['dateRange'],
-                        'error' => 'File from email:' . $fromMails[$key] . ' is larger 20 MB!',
-                    ]);
+                if($profileForEmails[$i]['numAttachments'] != 0){
+                    $profileFiles = [];
+                    $profileFilesName = [];
+                    for($j = 0; $j < $profileForEmails[$i]['numAttachments']; $j++){
+                        //Get name file
+                        $typeFile = pathinfo($mail->getAttachments()[$j]->getFileName())['extension'];
+                        // dd($mail->getAttachments()[$j]->getFileName());
+                        $new_name_file = Carbon::now()->format('Y_m_d\_His') . '_' . $this->vn_str_filter(preg_replace('/\s+/', '', ucwords(substr($fromNames[$key], 1, strlen($fromNames[$key]) - 2)))) . '_' . random_int(1000, 9999) . '.' . $typeFile;
+                        
+                        $sizeFile = $mail->getAttachments()[$j]->getSize();
+                        //If size file < 20 MB then save file
+                        array_push($profileFiles, $new_name_file);
+                        array_push($profileFilesName, $mail->getAttachments()[$j]->getFileName());
+                        if ($sizeFile < 20000000) {
+                            //save Profile at public/uploads/profile
+                            
+                            $mail->getAttachments()[$j]->saveAttachmentTo($path = 'uploads/profile', $filename = $new_name_file, $disk = 'public');
+                            
+                            // dd($mail->getAttachments()[0]->saveAttachmentTo($path = 'uploads/profile', $filename = $new_name_file, $disk = 'public'));
+                        } else {
+                            return view('admin.gmail.home', [
+                                'title' => 'Get Gmail',
+                                'dateRange' => $data['dateRange'],
+                                'error' => 'File from email:' . $fromMails[$key] . ' is larger 20 MB!',
+                            ]);
+                        }
+                    }
+                    $profileForEmails[$i]['file'] = $profileFiles;
+                    $profileForEmails[$i]['fileName'] = $profileFilesName;
                 }
-
                 $profileForEmails[$i] = (object) $profileForEmails[$i];
                 $i++;
             }
@@ -332,6 +383,7 @@ class GmailController extends Controller
         $profile = 0;
         //Store Profile and Profile For Email
         if (count($profileForEmails) > 0) {
+            // dd($profileForEmails);
             $profile =  $this->profileForEmailRepository->storeProfileForEmails($profileForEmails);
         }
         if ($profile > 0) {

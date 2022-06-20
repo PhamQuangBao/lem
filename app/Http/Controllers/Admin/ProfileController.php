@@ -256,8 +256,7 @@ class ProfileController extends Controller
         $profile = $this->profileRepository->find($id);
         
         // $file[0]->delete();
-        // dd($this->profileRepository->findFiles($id));
-        
+        // $files = $this->profileRepository->findFiles($id);
         
         
         // $deleteProfile = $this->profileRepository->delete($id);
@@ -268,16 +267,20 @@ class ProfileController extends Controller
         // }
         //If profile hasn't Interview and profileForEmail then delete only profile Else delete Interview and profile
         if (!$profileForEmail) {
-            $deleteProfile = $this->profileRepository->delete($id);
+            
             $files = $this->profileRepository->findFiles($id);
+            // dd($files);
             if ($files) {
                 foreach($files as $key => $file){
                     $path_file = 'uploads/profile/';
-                    $file_path = public_path($path_file . $profile->file);
+                    $file_path = public_path($path_file . $file->file);
                     if (File::exists($file_path))
                         File::delete($file_path);
+                    $files[$key]->delete();
                 }
             }
+
+            $deleteProfile = $this->profileRepository->delete($id);
             if ($deleteProfile) {
                 return redirect()->back()->with(['success' => 'Delete Profile is successfully!']);
             } else {
@@ -294,7 +297,7 @@ class ProfileController extends Controller
             if ($files) {
                 $path_file = 'uploads/profile/';
                 foreach($files as $file){
-                    $file_path = public_path($path_file . $file->name);
+                    $file_path = storage_path($path_file . $file->file);
                     if (File::exists($file_path))
                         File::delete($file_path);
                     $file->delete();

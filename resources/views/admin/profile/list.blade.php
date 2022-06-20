@@ -110,7 +110,7 @@
                                         <td>{{ $profile->profileJobs->key }}</td>
                                         <td>{{ $profile->profileStatus->name }}</td>
                                         @if(count($profile->files) >= 1)
-                                            <td><a href="https://docs.google.com/viewer?url={{request()->getHost()}}/uploads/profile/{{$profile->files[0]->name}}" target="_blank">link 1/{{count($profile->files)}}</a></td>
+                                            <td><p>link 1/{{count($profile->files)}}</p></td>
                                         @else
                                             <td>No file</td>
                                         @endif

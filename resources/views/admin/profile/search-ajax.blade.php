@@ -5,7 +5,11 @@
     <td>{{ $profile->name }}</td>
     <td>{{ $profile->profileJobs->key }}</td>
     <td>{{ $profile->profileStatus->name }}</td>
-    <td><a href="https://docs.google.com/viewer?url={{request()->getHost()}}/uploads/profile/{{$profile->file}}" target="_blank">link</a></td>
+    @if(count($profile->files) >= 1)
+        <td><p>link 1/{{count($profile->files)}}</p></td>
+    @else
+        <td>No file</td>
+    @endif
     <td>{{ $profile->submit_date }}</td>
     <td>
         <a href="/profile/{{$profile->id}}/detail" class="fa fa-eye text-primary" aria-hidden="true"></a>

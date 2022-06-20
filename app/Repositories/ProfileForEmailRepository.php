@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Models\Files;
 use App\Repositories\BaseRepository;
 use App\Models\Profile;
 use App\Models\ProfileForEmails;
@@ -42,6 +43,15 @@ class ProfileForEmailRepository extends BaseRepository implements ProfileForEmai
                     'note' => $data->subjects,
                 ));
                 $profile->save();
+
+                if(isset($data->file)){
+                    foreach($data->file as $key => $val){
+                        $dataFile['profile_id'] = $profile->id;
+                        $dataFile['name'] = ($data->fileName)[$key];
+                        $dataFile['file'] = $val;
+                        Files::create($dataFile);
+                    }
+                }
 
                 $email = ProfileForEmails::create(array(
                     'profile_id' => $profile->id,

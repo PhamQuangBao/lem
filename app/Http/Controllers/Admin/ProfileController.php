@@ -212,6 +212,22 @@ class ProfileController extends Controller
 
             $files = $request->file('fileUpload');
             if ($files) {
+                //delete file
+                $filesDelete = $this->profileRepository->findFiles($id);
+                // dd($files);
+                if ($filesDelete) {
+                    foreach($filesDelete as $key => $file){
+                        $path_file = 'uploads/profile/';
+                        $file_path = public_path($path_file . $file->file);
+                        if (File::exists($file_path)){
+                            File::delete($file_path);
+                        }else{
+                            File::delete(storage_path($path_file . $file->file));
+                        }
+                        $files[$key]->delete();
+                    }
+                }
+                //update file
                 foreach($files as $key => $file){
                     $dataFile['profile_id'] = $profile->id;
                     //Example :'  Nguyễn văn têN   '
@@ -228,6 +244,7 @@ class ProfileController extends Controller
                     $this->profileRepository->storeFile($dataFile);
                 }
             }
+            
             //Update Profile
             $profile =  $this->profileRepository->update($id, $data);
             if ($profile) {
@@ -274,8 +291,11 @@ class ProfileController extends Controller
                 foreach($files as $key => $file){
                     $path_file = 'uploads/profile/';
                     $file_path = public_path($path_file . $file->file);
-                    if (File::exists($file_path))
+                    if (File::exists($file_path)){
                         File::delete($file_path);
+                    }else{
+                        File::delete(storage_path($path_file . $file->file));
+                    }
                     $files[$key]->delete();
                 }
             }

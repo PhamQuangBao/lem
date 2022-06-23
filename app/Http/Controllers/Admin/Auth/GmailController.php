@@ -6,23 +6,30 @@ use App\Http\Controllers\Controller;
 use App\Repositories\UserRepositoryInterface;
 use App\Repositories\JobRepositoryInterface;
 use App\Repositories\ProfileForEmailRepositoryInterface;
+use App\Repositories\ProfileHistoryRepositoryInterface;
 use App\Repositories\ProfileRepositoryInterface;
 use Dacastro4\LaravelGmail\Facade\LaravelGmail;
 use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
+use File;
 
 class GmailController extends Controller
 {
     /**
      * @var UserRepositoryInterface|\App\Repositories\Repository
      */
-    public function __construct(UserRepositoryInterface $userRepository, JobRepositoryInterface $jobRepository, ProfileRepositoryInterface $profileRepository, ProfileForEmailRepositoryInterface $profileForEmailRepository)
+    public function __construct(
+        UserRepositoryInterface $userRepository, 
+        JobRepositoryInterface $jobRepository, 
+        ProfileRepositoryInterface $profileRepository, 
+        ProfileForEmailRepositoryInterface $profileForEmailRepository,
+        ProfileHistoryRepositoryInterface $profileHistoryRepo)
     {
         $this->userRepository = $userRepository;
         $this->profileRepository = $profileRepository;
         $this->jobRepository = $jobRepository;
         $this->profileForEmailRepository = $profileForEmailRepository;
-        // $this->profileHistoryRepo = $profileHistoryRepo;
+        $this->profileHistoryRepo = $profileHistoryRepo;
     }
 
     public function home()
@@ -62,13 +69,13 @@ class GmailController extends Controller
         }
 
         if (LaravelGmail::check()) {
-            $mailAlls = (LaravelGmail::message()->in(env('GOOGLE_GET_GMAIL_LABEL'))->after($aRanges[0])->before($aRanges[1])->all($pageToken = null));
+            $mailAlls = (LaravelGmail::message()->in('profile')->after($aRanges[0])->before($aRanges[1])->all($pageToken = null));
             // dd($mailAlls);
             if (count($mailAlls) > 0) {
                 foreach ($mailAlls as $key => $mailAll) {
                     $mail = LaravelGmail::message()->get($mailAll->id);
-                    $mailIDs[] = $mail->getId();
-                    $timeSends[] = $mail->getDate();
+                    $mailIDs[$key] = $mail->getId();
+                    $timeSends[$key] = $mail->getDate();
                     $subjects[$key] = $mail->getSubject();
                     //param: [CprofileN]-Apply for ... *branch name*
                     //get *kill name* -> branch_id -> job_id has status open, branch_id, lasted
@@ -113,6 +120,7 @@ class GmailController extends Controller
                     // return 4: 0912-345-678
                     // else return: 000000000
                     $textBody = $mail->getPlainTextBody();
+                    // dd(substr_count($textBody, "\r\n"));
                     preg_match(
                         '/[0-9]{10}|[0-9]{2}[\s][0-9]{9}|[0-9]{3}[\s][0-9]{9}|[0-9]{9}|[0-9]{4}[\s][0-9]{3}[\s][0-9]{3}|[0-9]{4}[\-][0-9]{3}[\-][0-9]{3}/',
                         $textBody,
@@ -140,7 +148,7 @@ class GmailController extends Controller
                         $fromMails[$key] = $mailIDs[$key] . '@vietnamworks.com.vn';
                         $phones[$key] = '0000000000';
                     }
-
+                    $fromNames[$key] = str_replace('"', '', $fromNames[$key]);
                     $statuses[] = 1;
                 }
 
@@ -152,7 +160,7 @@ class GmailController extends Controller
                     $emailsProfile = array_column($emailsProfile, 'mail');
                     //so sanh array[], return 0 if $mailFromMails is exit $emailsProfile
                     foreach ($fromMails as $key => $fromMail) {
-                        if (in_array($fromMail, $emailsProfile))
+                        if (in_array($fromMail, $emailsProfile) || $this->profileForEmailRepository->findGmailId($mailIDs[$key]))
                             $statuses[$key] = 0;
                     }
                 }
@@ -308,33 +316,44 @@ class GmailController extends Controller
         
         // $profileForEmails[][] ;
         $i = 0;
-        //  foreach ($statuses as $key => $status) {
-        foreach ($mailIDs as $key => $mailID) {
+        dd($selectMailIDs);
+        foreach($mailIDs as $key => $mailID){
             //Check mail has checked and not attachment
-            if (in_array($mailID, $selectMailIDs) && ($statuses[$key] != 3)) {
+            if (in_array($mailID, $selectMailIDs)) {
+                // check array[] email,
+                if($statuses[$key] == 0){
+                    $profileLast =  $this->profileRepository->getProfileForEmailsLast($fromMails[$key]);
+                    
+                    if (isset($profileLast->id)) {
+                        //Add profile in History
+                        $dataProfileHistory = [
+                            'profile_data' => json_encode($profileLast),
+                            'mail' => $profileLast->mail,
+                        ];
+                        $profileHistory = $this->profileHistoryRepo->create($dataProfileHistory);
 
-                // check array[] email, return 0 if $mailFromMails is exit $emailsProfile and delete email old or remove history
-                // dd($selectMailIDs);
-                foreach ($fromMails as $fromMail) {
-                    if (in_array($fromMail, $emailsProfile)) {
-                        $profileLast =  $this->profileRepository->getProfileForEmailsLast($fromMail);
-                        if(isset($profileLast->id)){
-                            // $interviewLast = $this->profileRepository->getInterviewForProfileId($profileLast->id);
-                            $dataProfileHistory = [
-                                'profile_data' => json_encode($profileLast),
-                                'mail' => $profileLast->mail,
-                                // 'interview_data' => json_encode($interviewLast),
-                            ];
-                            $profileHistory = $this->profileHistoryRepo->create($dataProfileHistory);
-                            //delete profile and interview
-                            // if(isset($interviewLast)){
-                            //     $interviewLast->delete();
-                            // }
-                            $profileLast->delete();
+                        $files = $this->profileRepository->findFiles($profileLast->id);
+                        
+                        //Delete file in folder public
+                        if ($files) {
+                            foreach($files as $key => $file){
+                                $path_file = 'uploads/profile/';
+                                $file_path = storage_path($path_file . $file->file);
+                                // dd($file_path);
+                                if (File::exists($file_path)){
+                                    File::delete($file_path);
+                                    // File::delete(public_path($path_file . $file->file));
+                                }
+                                $files[$key]->delete();
+                            }
                         }
-                        $profileLast = array();
+
+                        $profileLast->delete();
                     }
+                    $profileLast = array();
                 }
+
+                
                 $profileForEmails[$i]['jobIDs'] = $jobIDs[$key];
                 $profileForEmails[$i]['mailIDs'] = $mailIDs[$key];
                 $profileForEmails[$i]['fromMails'] = $fromMails[$key];
@@ -343,9 +362,10 @@ class GmailController extends Controller
                 $profileForEmails[$i]['subjects'] = $subjects[$key];
                 $profileForEmails[$i]['phones'] = $phones[$key];
                 $profileForEmails[$i]['numAttachments'] = $numAttachments[$key];
-
-                $mail = LaravelGmail::message()->get($mailIDs[$key]);
-                if($profileForEmails[$i]['numAttachments'] != 0){
+                
+                //Get name file
+                if($numAttachments[$key] != 0){
+                    $mail = LaravelGmail::message()->get($mailIDs[$key]);
                     $profileFiles = [];
                     $profileFilesName = [];
                     for($j = 0; $j < $profileForEmails[$i]['numAttachments']; $j++){
@@ -375,7 +395,9 @@ class GmailController extends Controller
                     $profileForEmails[$i]['file'] = $profileFiles;
                     $profileForEmails[$i]['fileName'] = $profileFilesName;
                 }
+
                 $profileForEmails[$i] = (object) $profileForEmails[$i];
+                
                 $i++;
             }
         }

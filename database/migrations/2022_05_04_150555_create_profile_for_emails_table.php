@@ -17,7 +17,7 @@ class CreateProfileForEmailsTable extends Migration
             $table->increments('id');
             //job_status foreign key 1-1
             $table->integer('profile_id')->unsigned();
-            $table->foreign('profile_id')->references('id')->on('profile');
+            // $table->foreign('profile_id')->references('id')->on('profile');
             $table->string('email_id')->nullable();
             $table->string('label')->nullable();
             $table->string('form_name')->nullable();

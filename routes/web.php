@@ -49,7 +49,7 @@ Route::group(['prefix' => 'profile/gmail', 'middleware' => 'auth'], function () 
     });
 });
 
-Route::group(['prefix' => 'jobs', 'middleware' => 'auth.role: 1, 2'], function () {
+Route::group(['prefix' => 'jobs', 'middleware' => 'auth'], function () {
     Route::get('/add', [JobController::class, 'add']);
     Route::post('/store', [JobController::class, 'store'])->name('admin.jobs.store');
     Route::get('list', [JobController::class, 'list']);

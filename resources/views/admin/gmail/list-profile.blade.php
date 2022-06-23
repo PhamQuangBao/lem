@@ -114,7 +114,7 @@
             <tr>
               @endif
 
-              <td class="text-center">{{ $key + 1 }} <input type="checkbox" name="selectSaves[]" value="{{ $mailIDs[$key] }}" @if ($statuses[$key]==1) checked @endif></td>
+              <td class="text-center">{{ $key + 1 }} <input type="checkbox" class="array-select-save" name="selectSaves[]" value="{{ $mailIDs[$key] }}" @if ($statuses[$key]==1) checked @endif></td>
               <td>{{ $fromMails[$key] }}</td>
               <td>{{ $fromNames[$key] }}</td>
               <td class="text-center">{{ $phones[$key] }}</td>
@@ -145,7 +145,7 @@
 
     <div class="col text-center">
       @if(LaravelGmail::check())
-      <button id="submits" type="submit" class="btn btn-primary" onclick="return confirm('Do you want to save the data!')">Save</button>
+      <button id="submitSave" type="submit" class="btn btn-primary" onclick="return confirm('Do you want to save the data!')" disabled>Save</button>
       @else
       <button id="submits" type="submit" class="btn btn-primary" disabled>Save</button>
       @endif
@@ -176,11 +176,34 @@
 
 <script>
   $(function() {
-    $("#example1").DataTable({
-      "scrollX": true,
-    });
+    // $("#example1").DataTable({
+    //   "scrollX": true,
+    // });
     //Date range picker
     $('#reservation').daterangepicker();
+
+    // Check checkbox with selected 
+    var countCheckbox = 0;
+    
+    $("#example1 input:checkbox:checked").each(function(){
+      countCheckbox += 1;
+    });
+    
+    if(countCheckbox !== 0){
+      $('#submitSave').removeAttr('disabled');
+    }
+
+    $(".array-select-save").change(function() {
+      if($(this).prop("checked")){
+        countCheckbox += 1;
+        $('#submitSave').removeAttr('disabled');
+      }else{
+        countCheckbox -= 1;
+        if(countCheckbox === 0) {
+          $('#submitSave').attr('disabled', 'disabled');
+        }
+      }
+    });
   });
 </script>
 @endsection

@@ -94,4 +94,20 @@ class ProfileForEmailRepository extends BaseRepository implements ProfileForEmai
             return $profileForEmail;
         }
     }
+
+    /**
+     * Check gmail id exist
+     * @param $id
+     * 
+     * @return true|false
+     */
+    public function findGmailId($id)
+    {
+        $cvForEmail = ProfileForEmails::where('email_id', $id)->first();
+        if($cvForEmail){
+            return true;
+        }
+
+        return false;
+    }
 }

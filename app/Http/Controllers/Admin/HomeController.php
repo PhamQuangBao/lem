@@ -36,6 +36,7 @@ class HomeController extends Controller
         // dd($this->userRepository->getRolesIDByUserID(2, [2]));
         return view('admin.home.home', [
             'title' => 'Home page',
+            'count_job_open' => count($jobs_status_open),
             'jobs' => $jobs_status_open,
             'totalProfile' => count($profilesNew) + count($profilesInp) + count($profilesUnqualified) + count($profilesQualified),
             'profilesNew' => $profilesNew,

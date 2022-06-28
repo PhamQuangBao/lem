@@ -121,6 +121,14 @@ class GmailController extends Controller
                     // else return: 000000000
                     $textBody = $mail->getPlainTextBody();
                     // dd(substr_count($textBody, "\r\n"));
+                    // dd($textBody);
+
+                    // $matches = array();
+
+                    // // returns all results in array $matches
+                    // preg_match_all('/[0-9]{3}[\-][0-9]{6}|[0-9]{3}[\s][0-9]{6}|[0-9]{3}[\s][0-9]{3}[\s][0-9]{4}|[0-9]{9}|[0-9]{3}[\-][0-9]{3}[\-][0-9]{4}/', $text, $matches);
+                    // $matches = $matches[0];
+
                     preg_match(
                         '/[0-9]{10}|[0-9]{2}[\s][0-9]{9}|[0-9]{3}[\s][0-9]{9}|[0-9]{9}|[0-9]{4}[\s][0-9]{3}[\s][0-9]{3}|[0-9]{4}[\-][0-9]{3}[\-][0-9]{3}/',
                         $textBody,

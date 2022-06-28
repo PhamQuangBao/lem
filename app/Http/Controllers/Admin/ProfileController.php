@@ -34,11 +34,13 @@ class ProfileController extends Controller
         $profileStatuses = $this->profileRepository->getProfileStatuses();
         $branches = $this->profileRepository->getBranches();
         $jobs = $this->jobRepository->getJobWithBranchOnAddProfile();
+        $universities = $this->profileRepository->getUniversities();
         return view('admin.profile.add', [
             'title' => 'Add New Profile',
             'profileStatuses' => $profileStatuses,
             'jobs' => $jobs,
             'branches' => $branches,
+            'universities' => $universities,
         ]);
     }
 
@@ -166,6 +168,7 @@ class ProfileController extends Controller
     public function edit($id)
     {
         $profile = $this->profileRepository->find($id);
+        $universities = $this->profileRepository->getUniversities();
         // $interviews = $this->interviewRepo->findByProfileId($id);
         // $interviewers = $this->userRepository->getAll();
 
@@ -187,13 +190,29 @@ class ProfileController extends Controller
                 'jobs'      => $jobs,
                 'branches'    => $branches,
                 // 'channels'  => $channels,
-                // 'universities' => $universities,
+                'universities' => $universities,
                 'profile'        => $profile,
                 // 'interviewTime' => $interviewTime,
                 // 'interviewers' => $interviewers
             ]);
         } else {
             return redirect()->back()->with('error', 'Profile not found!');;
+        }
+    }
+
+    public function updateDetail(Request $request, $id)
+    {
+        $profile = $this->profileRepository->find($id);
+        if ($profile) {
+            $data = $request->only(['profile_status_id']);
+            $profile_detail = $this->profileRepository->update($id, $data);
+            if ($profile_detail) {
+                return redirect()->back()->with('success', 'Update profile detail Success!');
+            } else {
+                return redirect()->back()->with('error', 'Update profile detail has something wrong!!');
+            }
+        } else {
+            return redirect()->back()->with('error', 'Profile not found!');
         }
     }
 
@@ -207,7 +226,7 @@ class ProfileController extends Controller
             $profileStatuses = $this->profileRepository->getProfileStatuses();
             $branches = $this->profileRepository->getBranches();
             // $channels = $this->profileRepository->getChannels();
-            // $universities = $this->profileRepository->getUniversities();
+            $universities = $this->profileRepository->getUniversities();
             $jobs = $this->jobRepository->getJobWithSkillOnAddProfile();
 
             $files = $request->file('fileUpload');

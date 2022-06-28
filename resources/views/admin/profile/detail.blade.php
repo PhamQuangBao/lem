@@ -121,6 +121,7 @@
                         <p>{{ $profile->phone_number }}</p>
                         <p>{{ $profile->mail }}</p>
                         <p>{{ $profile->address }}</p>
+                        <p>{{ $profile->profileUniversities->name }}</p>
                     </div>
                     <div class="col-md-3">
                         <p>{{ $profile->submit_date }}</p>

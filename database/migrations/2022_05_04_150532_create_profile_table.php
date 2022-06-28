@@ -30,6 +30,9 @@ return new class extends Migration
             //language foreign key 1-n
             $table->integer('language_id')->unsigned()->nullable();
             $table->foreign('language_id')->references('id')->on('language');
+            //cv university id 1-n
+            $table->integer('university_id')->unsigned()->nullable();
+            $table->foreign('university_id')->references('id')->on('universities');
             $table->integer('year_of_experience')->nullable();
             $table->text('note')->nullable();
             $table->timestamps();

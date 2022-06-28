@@ -27,6 +27,6 @@ class JobSeeder extends Seeder
             ],
         ]);
 
-        Jobs::factory(20)->create();
+        // Jobs::factory(20)->create();
     }
 }

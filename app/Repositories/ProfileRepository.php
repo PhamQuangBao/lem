@@ -6,6 +6,7 @@ use App\Models\Branches;
 use App\Models\Files;
 use App\Models\Profile;
 use App\Models\ProfileStatuses;
+use App\Models\Universities;
 use Illuminate\Support\Facades\DB;
 
 class ProfileRepository extends BaseRepository implements ProfileRepositoryInterface
@@ -43,6 +44,16 @@ class ProfileRepository extends BaseRepository implements ProfileRepositoryInter
     public function getBranches()
     {
         return Branches::all();
+    }
+
+    /**
+     * Get All Universities
+     * @param
+     * @return mixed
+     */
+    public function getUniversities()
+    {
+        return Universities::all();
     }
 
     /**

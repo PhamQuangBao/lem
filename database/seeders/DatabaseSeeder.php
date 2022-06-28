@@ -22,7 +22,8 @@ class DatabaseSeeder extends Seeder
             ProfileStatusGroupSeeder::class,
             ProfileStatusSeeder::class,
             JobSeeder::class,
-            ProfileSeeder::class,
+            UniversitySeeder::class,
+            // ProfileSeeder::class,
             // FileSeeder::class,
         ]);
     }

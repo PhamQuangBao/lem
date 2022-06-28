@@ -25,6 +25,7 @@ class Profile extends Model
         'address',
         'profile_status_id',
         'language_id',
+        'university_id',
         'year_of_experience',
         'note',
     ];
@@ -53,5 +54,14 @@ class Profile extends Model
     public function files()
     {
         return $this->hasMany(Files::class, 'profile_id', 'id');
+    }
+
+    /**
+     * Relationship: Profile - Universities : 1 - 1
+     *
+     */
+    public function profileUniversities()
+    {
+        return $this->hasOne(Universities::class, 'id', 'university_id');
     }
 }

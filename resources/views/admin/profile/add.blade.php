@@ -161,6 +161,20 @@
                     @enderror
                 </div>
             </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label>University</label>
+                    <select class="form-control" name="university_id">
+                        @foreach($universities as $university)
+                        @if (old('university_id') == $university->id)
+                        <option value="{{$university->id }}" selected>{{$university->name}}</option>
+                        @else
+                        <option value="{{$university->id}}">{{$university->name}}</option>
+                        @endif
+                        @endforeach
+                    </select>
+                </div>
+            </div>
         </div>
 
         <div class="row">

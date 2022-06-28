@@ -84,6 +84,26 @@ class JobController extends Controller
         $job = $this->jobRepository->findJob($id);
         if ($job) {
             $checkHasQuestionResponses = $this->jobRepository->checkJobHasQuestionResponses($id);
+            $arrProfileInterview = array();
+            $arrProfileOffer = array();
+            $arrProfileUnqualified = array();
+            foreach($job->Profile as $key => $item){
+                $idStatusGroups = $item->profileStatus->profile_status_group_id;
+
+                // Profile Interview
+                if($idStatusGroups == 2){
+                    $arrProfileInterview[] = $item;
+                }
+                // Profile Unqualified
+                if($idStatusGroups == 3){
+                    $arrProfileUnqualified[] = $item;
+                }
+                // Profile Offer
+                if($idStatusGroups == 4){
+                    $arrProfileOffer[] = $item;
+                }
+            }
+
             if($checkHasQuestionResponses) {
                 //show responses if job has responses
                 $QuestionResponses = $this->jobRepository->getQuestionResponsesByJobId($id);
@@ -103,12 +123,18 @@ class JobController extends Controller
                     'job_statuses' => $job_statuses,
                     'arrQuestion' => json_decode($QuestionResponses->question, true),
                     'arrAnswer' =>  $arrAnswer,
+                    'arrProfileInterview' => $arrProfileInterview,
+                    'arrProfileOffer' => $arrProfileOffer,
+                    'arrProfileUnqualified' => $arrProfileUnqualified,
                 ]);
             }
             return view('admin.jobs.detail', [
                 'title' => 'Job Detail', 
                 'job' => $job, 
-                'job_statuses' => $job_statuses
+                'job_statuses' => $job_statuses,
+                'arrProfileInterview' => $arrProfileInterview,
+                'arrProfileOffer' => $arrProfileOffer,
+                'arrProfileUnqualified' => $arrProfileUnqualified,
             ]);
         } else {
             return redirect()->back()->with('error', 'Job not found!');
@@ -394,21 +420,43 @@ class JobController extends Controller
         return  ['id'=> $idChannel, 'name'=> $channelName];
     }
 
+    // /**
+    //  * check string University
+    //  * @return array['id'=> $idUniversity, 'name'=> $universityName]
+    //  */
+    // public function checkUniversity($strUniversity){
+    //     $listUniversitys = $this->internCvRepository->getUniversities();
+    //     $idUniversity = 1;
+    //     $universityName = "";
+    //     foreach($listUniversitys as $university){
+    //         if($strUniversity === $university->name){
+    //             $idUniversity = $university->id;
+    //             $universityName = $university->name;
+    //             break;
+    //         }
+    //     }
+    //     return   ['id'=> $idUniversity, 'name'=> $universityName];
+    // }
+
     /**
      * check string University
-     * @return array['id'=> $idUniversity, 'name'=> $universityName]
+     * @return array $idUniversity
      */
     public function checkUniversity($strUniversity){
-        $listUniversitys = $this->internCvRepository->getUniversities();
+        $listUniversitys = $this->profileRepository->getUniversities();
         $idUniversity = 1;
         $universityName = "";
         foreach($listUniversitys as $university){
-            if($strUniversity === $university->name){
-                $idUniversity = $university->id;
-                $universityName = $university->name;
-                break;
+            if(strpos($university->name, '(')){
+                $temp = substr($university->name, strpos($university->name, '(') + 1, strlen($university->name) - (strpos($university->name, '(') + 1) - 1);
+                
+                if(strpos($strUniversity, $temp) !== FALSE){
+                    $idUniversity = $university->id;
+                    $universityName = $university->name;
+                    break;
+                }
             }
         }
-        return   ['id'=> $idUniversity, 'name'=> $universityName];
+        return ['id'=> $idUniversity, 'name'=> $universityName];
     }
 }

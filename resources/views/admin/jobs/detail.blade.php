@@ -43,6 +43,21 @@
             {{ count($job->Profile) }} Profile
         </span>
     </div>
+    <div class="mt-2 ml-2 h5">
+        <span class="badge bg-warning">
+            {{ count($arrProfileInterview) }} Interviewed
+        </span>
+    </div>
+    <div class="mt-2 ml-2 h5">
+        <span class="badge bg-danger">
+            {{ count($arrProfileOffer) }} Offer
+        </span>
+    </div>
+    <div class="mt-2 ml-2 h5">
+        <span class="badge bg-dark">
+            {{ count($arrProfileUnqualified) }} Unqualified
+        </span>
+    </div>
 </div>
 <div class="container-fluid border p-3 bg-light">
     <!-- show message -->

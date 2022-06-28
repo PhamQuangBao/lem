@@ -32,7 +32,7 @@
                             <div class="info-box bg-warning">
                                 <div class="info-box-content">
                                     <span class="info-box-text text-center">Total open jobs</span>
-                                    <h3 class="info-box-number text-center mb-0"></h3>
+                                    <h3 class="info-box-number text-center mb-0">{{ $count_job_open }}</h3>
                                 </div>
                             </div>
                         </div>
@@ -40,7 +40,7 @@
                             <div class="info-box bg-success">
                                 <div class="info-box-content">
                                     <span class="info-box-text text-dark text-center">Total Profiles of open jobs</span>
-                                    <h3 class="info-box-number text-dark text-center mb-0"></h3>
+                                    <h3 class="info-box-number text-dark text-center mb-0">{{ $totalProfile }}</h3>
                                 </div>
                             </div>
                         </div>

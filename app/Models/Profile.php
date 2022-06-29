@@ -28,6 +28,9 @@ class Profile extends Model
         'university_id',
         'year_of_experience',
         'note',
+        'calendar_key',
+        'time_at',
+        'time_end',
     ];
 
     /**

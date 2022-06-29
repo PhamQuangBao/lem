@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\Auth\AuthController;
 use App\Http\Controllers\Admin\Auth\GmailController;
+use App\Http\Controllers\Admin\ChartController;
 use App\Http\Controllers\Admin\HomeController;
 use App\Http\Controllers\Admin\JobController;
 use App\Http\Controllers\Admin\ProfileController;
@@ -91,4 +92,10 @@ Route::group(['prefix' => 'users', 'middleware' => 'auth'], function () {
 Route::group(['prefix' => 'profile', 'middleware' => 'auth'], function () {
     Route::get('edit', [AuthController::class, 'edit']);
     Route::post('/update', [AuthController::class, 'update'])->name('admin.users.update');
+});
+
+Route::group(['prefix' => 'charts', 'middleware' => 'auth'], function () {
+    Route::get('university', [ChartController::class, 'university']);
+    Route::get('jobs', [ChartController::class, 'jobs']);
+    Route::get('total-profile', [ChartController::class, 'totalProfileByYear']);
 });

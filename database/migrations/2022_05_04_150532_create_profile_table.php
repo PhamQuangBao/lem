@@ -35,6 +35,9 @@ return new class extends Migration
             $table->foreign('university_id')->references('id')->on('universities');
             $table->integer('year_of_experience')->nullable();
             $table->text('note')->nullable();
+            $table->string('calendar_key')->unsigned()->nullable();
+            $table->dateTime('time_at')->nullable();
+            $table->dateTime('time_end')->nullable();
             $table->timestamps();
         });
     }

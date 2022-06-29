@@ -18,6 +18,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(\App\Repositories\UserRepositoryInterface::class, \App\Repositories\UserRepository::class);
         $this->app->bind(\App\Repositories\ProfileForEmailRepositoryInterface::class, \App\Repositories\ProfileForEmailRepository::class);
         $this->app->bind(\App\Repositories\ProfileHistoryRepositoryInterface::class, \App\Repositories\ProfileHistoryRepository::class);
+        $this->app->bind(\App\Repositories\ChartRepositoryInterface::class, \App\Repositories\ChartRepository::class);
     }
 
     /**

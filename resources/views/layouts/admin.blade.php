@@ -98,6 +98,12 @@
                             </a>
                             <ul class="nav nav-treeview">
                                 <li class="nav-item">
+                                    <a href="/charts/university" class="nav-link {{(request()->is('charts/university*')) ? 'active' : ''}}">
+                                        &emsp;<i class="fas fa-chart-bar nav-icon"></i>
+                                        <p>University</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
                                     <a href="/charts/total-profile" class="nav-link {{(request()->is('charts/total-profile*')) ? 'active' : ''}}">
                                         &emsp;<i class="fas fa-chart-bar nav-icon"></i>
                                         <p>Total Profile</p>

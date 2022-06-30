@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use File;
 use Exception;
 use Illuminate\Http\File as HttpFile;
+use Spatie\GoogleCalendar\Event;
 use Illuminate\Http\Request;
 
 class ProfileController extends Controller
@@ -27,6 +28,7 @@ class ProfileController extends Controller
         $this->profileRepository = $profileRepository;
         $this->jobRepository = $jobRepository;
         $this->profileForEmailRepo = $profileForEmailRepo;
+        $this->event = new Event;
     }
 
     public function add()
@@ -100,6 +102,31 @@ class ProfileController extends Controller
                 }
             }
             
+            if ($data['interviewTime']) {
+                $dataInterview['time_at'] = Carbon::parse($data['interviewTime']);
+                $dataInterview['time_end'] = Carbon::parse($data['interviewTime'])->addHour();
+                $skills =  $this->jobRepository->find($data['job_id'])->Branches;
+                
+                $nameEvent = 'Interview - ' . $skills->name . ' - ' . $data['name'];
+                
+                //Set Calendar Google
+                $this->event->name = $nameEvent;
+                
+                $this->event->startDateTime = $dataInterview['time_at'];
+                
+                $this->event->endDateTime = $dataInterview['time_end'];
+                
+                $calendar_key = $this->event->save()->id;
+                
+                $dataInterview = [
+                    'calendar_key' => $calendar_key,
+                    'time_at' =>  $dataInterview['time_at'],
+                    'time_end' =>  $dataInterview['time_end'],
+                ];
+                //Insert Interview
+                $createInterviews = $this->profileRepository->update($profile->id, $dataInterview);
+            }
+
             if ($profile) {
                 return redirect('/profile/add')->with(['success' => 'Add new Profile is successfully!',]);
             } else {
@@ -172,12 +199,12 @@ class ProfileController extends Controller
         // $interviews = $this->interviewRepo->findByProfileId($id);
         // $interviewers = $this->userRepository->getAll();
 
-        // if (isset($interviews) && isset($interviews['time_at'])) {
-        //     $interviewTime = Carbon::parse($interviews['time_at'])->format('m/d/Y h:i A');
-        // } else {
-        //     $interviewTime = '';
-        // }
-
+        if ($profile->time_at) {
+            $interviewTime = Carbon::parse($profile->time_at)->format('m/d/Y h:i A');
+        } else {
+            $interviewTime = '';
+        }
+        
         $profileStatuses = $this->profileRepository->getProfileStatuses();
         $branches = $this->profileRepository->getBranches();
         // $channels = $this->profileRepository->getChannels();
@@ -192,7 +219,7 @@ class ProfileController extends Controller
                 // 'channels'  => $channels,
                 'universities' => $universities,
                 'profile'        => $profile,
-                // 'interviewTime' => $interviewTime,
+                'interviewTime' => $interviewTime,
                 // 'interviewers' => $interviewers
             ]);
         } else {
@@ -228,6 +255,52 @@ class ProfileController extends Controller
             // $channels = $this->profileRepository->getChannels();
             $universities = $this->profileRepository->getUniversities();
             $jobs = $this->jobRepository->getJobWithSkillOnAddProfile();
+            
+            if ($data['interviewTime']) {
+                $dataInterview['time_at'] = Carbon::parse($data['interviewTime']);
+                $dataInterview['time_end'] = Carbon::parse($data['interviewTime'])->addHour();
+                $skills =  $this->jobRepository->find($data['job_id'])->Branches;
+                $nameEvent = 'Interview - ' . $skills->name . ' - ' . $data['name'];
+                //Interview ID is null
+                if ($profile->time_at == null) {
+                    $this->event->name = $nameEvent;
+                    $this->event->startDateTime = $dataInterview['time_at'];
+                    $this->event->endDateTime = $dataInterview['time_end'];
+                    //Add calendar
+                    $calendarKey = $this->event->save()->id;
+
+                    $dataInterview = [
+                        'calendar_key' =>  $calendarKey,
+                        'time_at' =>  $dataInterview['time_at'],
+                        'time_end' =>  $dataInterview['time_end'],
+                    ];
+                    $updateProfile = $this->profileRepository->update($profile->id, $dataInterview);
+                } elseif ($profile->time_at != $dataInterview['time_at']) {
+                    //update Calendar
+                    if (isset($profile->calendar_key)) {
+                        $event = Event::find($profile->calendar_key);
+                        $event->update(['name' =>  $nameEvent, 'startDateTime' => $dataInterview['time_at'], 'endDateTime' => $dataInterview['time_end']]);
+                    }
+                    $dataInterview = [
+                        //'calendar_key' => $this->event->save()->id,
+                        'time_at' =>  $dataInterview['time_at'],
+                        'time_end' =>  $dataInterview['time_end'],
+                    ];
+                    //update Interview
+                    $updateProfile = $this->profileRepository->update($profile->id, $dataInterview);
+                }
+            } elseif (isset($profile->calendar_key)) {
+                //delete interview if not interview time
+                //if have calendar_key and $data['interviewTime'] == null then delete event
+                $event = Event::find($profile->calendar_key);
+                $event->delete();
+                $dataInterview = [
+                    'calendar_key' => '',
+                    'time_at' =>  null,
+                    'time_end' =>  null,
+                ];
+                $updateProfile = $this->profileRepository->update($profile->id, $dataInterview);
+            }
 
             $files = $request->file('fileUpload');
             if ($files) {

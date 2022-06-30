@@ -1,3 +1,7 @@
+@section('header')
+<!-- Tempusdominus Bootstrap 4 Date Time -->
+<link rel="stylesheet" href="/template/admin/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
+@endsection
 @extends('layouts.admin')
 @section('content')
 <div class="container border p-3 bg-light">
@@ -193,18 +197,18 @@
             <!-- /.col -->
             <div class="col-md-6">
                 <div class="form-group">
-                    <label>Interview Time Ranger:</label>
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="far fa-clock"></i></span>
+                    <label>Interview Time:</label>
+                    <div class="input-group date" id="reservationdatetime" data-target-input="nearest">
+                        <input type="text" class="form-control datetimepicker-input  @error('interviewTime') is-invalid @enderror" data-target="#reservationdatetime" name="interviewTime" id="interviewTime" value="{{ old('interviewTime') }}" />
+                        <div class="input-group-append" data-target="#reservationdatetime" data-toggle="datetimepicker">
+                            <div class="input-group-text"><i class="fa fa-calendar"></i></div>
                         </div>
-                        <input type="text" class="form-control float-right @error('interviewTimeRanger') is-invalid @enderror" name="interviewTimeRanger" id="interviewTimeRanger" value="{{ old('interviewTimeRanger') }}" >
-                        @error('interviewDate')
-                        <span class="error invalid-feedback" role="alert">
-                            <strong>{{ $message }}</strong>
-                        </span>
-                        @enderror
                     </div>
+                    @error('interviewTime')
+                    <span class="error invalid-feedback" role="alert">
+                        <strong>{{ $message }}</strong>
+                    </span>
+                    @enderror
                 </div>
             </div>
             <!-- /.form-group -->
@@ -241,6 +245,9 @@
 @endsection
 
 @section('footer')
+<!-- Tempusdominus Bootstrap 4 Date Time-->
+<script src="/template/admin//plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
+
 <script type="text/javascript">
     //Select key job and auto fill select skill
     $('#jobId').on('change', function() {
@@ -275,13 +282,19 @@
     }
 
     // Date range picker with time picker
-    $('#interviewTimeRanger').daterangepicker({
-        timePicker: true,
-        timePickerIncrement: 30,
-        locale: {
-            format: 'MM/DD/YYYY hh:mm A'
+    //Date and time picker
+    $('#reservationdatetime').datetimepicker({
+        icons: {
+            time: 'far fa-clock'
         }
     });
+    // $('#interviewTimeRanger').daterangepicker({
+    //     timePicker: true,
+    //     timePickerIncrement: 30,
+    //     locale: {
+    //         format: 'MM/DD/YYYY hh:mm A'
+    //     }
+    // });
     $('#interviewTimeRanger').val('');
 </script>
 @endsection

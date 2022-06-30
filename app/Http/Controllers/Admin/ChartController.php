@@ -242,13 +242,13 @@ class ChartController extends Controller
         $arrayDataYear = array();
         for ($i = 0; $i < sizeof($listYear); $i++) {
             $data = $this->chartRepository->getTotalProfilesByYear($listYear[$i]->year);
-            $totalData = $data[0][0]->count_profiles . ',' . $data[0][0]->count_interviews . ',' . count($data[1]);
+            $totalData = $data[0][0]->count_profiles . ',' . count($data[2]) . ',' . count($data[1]);
             $arrayDataYear[$i] = array($listYear[$i]->year, $totalData);
         }
         $arrayDataYearMonth = array();
         for ($i = 0; $i < sizeof($listYearMonth); $i++) {
             $data = $this->chartRepository->getTotalProfilesByYearMonth($listYearMonth[$i]->year);
-            $totalData = $data[0][0]->count_profiles . ',' . $data[0][0]->count_interviews . ',' . count($data[1]);
+            $totalData = $data[0][0]->count_profiles . ',' . count($data[2]) . ',' . count($data[1]);
             $arrayDataYearMonth[$i] = array($listYearMonth[$i]->year, $totalData);
         }
         return view('admin.charts.total-profiles', [

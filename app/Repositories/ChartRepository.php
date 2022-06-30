@@ -74,18 +74,46 @@ class ChartRepository extends BaseRepository implements ChartRepositoryInterface
      */
     public function getTotalProfilesByYear($year)
     {
-        //get total profiles and toatal interview
-        $listDataProfileInterview = DB::table('profile')
-            ->select( DB::raw("Count(EXTRACT(year FROM submit_date)) AS count_profiles"), DB::raw('count(interviews.onboard_date) as count_interviews'))
-            ->leftJoin('interviews', 'profile.id', '=', 'interviews.profile_id')
+        //get total profiles
+        $listDataProfile = DB::table('profile')
+            ->select( DB::raw("Count(EXTRACT(year FROM submit_date)) AS count_profiles"))
             ->where(DB::raw("EXTRACT(year FROM submit_date)"), $year)
             ->get();
+        //get total profiles and total interview to the following status
+        $listDataProfileInterview = DB::table('profile')
+        ->where(DB::raw("EXTRACT(year FROM submit_date)"), $year)
+        ->whereIn('profile_status_id', [6, 7, 8])
+        ->get();
         //get total profile with statuses is offered
         $listDataOffered = DB::table('profile')
             ->where(DB::raw("EXTRACT(year FROM submit_date)"), $year)
             ->whereIn('profile_status_id', [8])
             ->get();
-        return array($listDataProfileInterview, $listDataOffered);
+        return array($listDataProfile, $listDataOffered, $listDataProfileInterview);
+    }
+
+     /**
+     * get list data by year month for chart TotalProfile by submit_date
+     * @return array $listData
+     */
+    public function getTotalProfilesByYearMonth($year)
+    {
+        //get total profiles and toatal interview
+        $listDataProfile = DB::table('profile')
+            ->select( DB::raw("Count(SUBSTRING(TO_CHAR(profile.submit_date, 'YYYY-MM-DD'), 1, 7)) AS count_profiles"))
+            ->where(DB::raw("SUBSTRING(TO_CHAR(profile.submit_date, 'YYYY-MM-DD'), 1, 7)"), $year)
+            ->get();
+        //get total profiles and total interview to the following status
+        $listDataProfileInterview = DB::table('profile')
+            ->where(DB::raw("SUBSTRING(TO_CHAR(profile.submit_date, 'YYYY-MM-DD'), 1, 7)"), $year)
+            ->whereIn('profile_status_id', [6, 7, 8])
+            ->get();
+        //get total profile with statuses is offered
+        $listDataOffered = DB::table('profile')
+            ->where(DB::raw("SUBSTRING(TO_CHAR(profile.submit_date, 'YYYY-MM-DD'), 1, 7)"), $year)
+            ->whereIn('profile_status_id', [8])
+            ->get();
+        return array($listDataProfile, $listDataOffered, $listDataProfileInterview);
     }
 
     /**

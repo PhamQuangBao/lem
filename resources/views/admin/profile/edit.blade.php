@@ -110,6 +110,17 @@
                     @enderror
                 </div>
             </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label>Birth Date:<span class="text-danger"> *</span></label>
+                    <input type="date" class="form-control @error('birthday') is-invalid @enderror"  name="birthday" value="@if(old('birthday')){{old('birthday')}}@else{{$profile->birthday}}@endif">
+                    @error('birthday')
+                    <span class="error invalid-feedback" role="alert">
+                        <strong>{{ $message }}</strong>
+                    </span>
+                    @enderror
+                </div>
+            </div>
         </div><!-- /.row -->
         <div class="row">
             <div class="col-md-6">
@@ -184,7 +195,24 @@
                 </div>
                 <!-- /.form-group -->
             </div>
-            <!-- /.col -->
+            <div class="col-md-6">
+            <div class="form-group">
+                    <label>Interview Time:</label>
+                    <div class="input-group">
+                        <div class="input-group date" id="reservationdatetime" data-target-input="nearest">
+                            <input type="text" class="form-control datetimepicker-input  @error('interviewTime') is-invalid @enderror" data-target="#reservationdatetime" name="interviewTime" id="interviewTime" value="@if(old('interviewTime')){{old('interviewTime')}}@else{{$interviewTime}}@endif" />
+                            <div class="input-group-append" data-target="#reservationdatetime" data-toggle="datetimepicker">
+                                <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                            </div>
+                        </div>
+                        @error('interviewDate')
+                        <span class="error invalid-feedback" role="alert">
+                            <strong>{{ $message }}</strong>
+                        </span>
+                        @enderror
+                    </div>
+                </div>
+            </div>
         </div><!-- /.row -->
 
         <div class="row">
@@ -216,9 +244,6 @@
             <div class="col-md-6">
                 <button type="submit" id="submit" class="btn btn-primary">Save</button>
                 <a type="button" href="/" class="btn btn-default">Cancel</a>
-            </div>
-            <div class="col-md-3">
-                <a type="button" href="./detail" class="btn btn-outline-light">Interview</a>
             </div>
         </div>
         <!-- /.row -->

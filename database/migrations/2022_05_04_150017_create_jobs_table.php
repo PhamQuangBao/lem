@@ -25,6 +25,9 @@ return new class extends Migration
             $table->foreign('branch_id')->references('id')->on('branches');
             $table->text('description')->nullable();
             $table->date('close_date')->nullable();
+            $table->string('calendar_key')->unsigned()->nullable();
+            $table->dateTime('time_at')->nullable();
+            $table->dateTime('time_end')->nullable();
             $table->timestamps();
         });
     }

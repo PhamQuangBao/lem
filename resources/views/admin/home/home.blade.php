@@ -16,6 +16,12 @@
     .profile-ordinal{
         max-width: 50px;
     }
+    .div-action{
+        max-width: 100px;
+    }
+    .div-phone{
+        max-width: 180px;
+    }
 </style>
 @endsection
 
@@ -121,9 +127,9 @@
                             <div class="border-top border-bottom pt-2 bg-light">|</div>
                             <div class="col-3 pt-2 border-top border-bottom text-center font-weight-bold bg-light">{{ $profile->name }}</div>
                             <div class="border-top border-bottom pt-2 bg-light">|</div>
-                            <div class="col-3 pt-2 border-top border-bottom text-center font-weight-bold bg-light">{{ $profile->phone_number }}</div>
+                            <div class="col-3 pt-2 border-top border-bottom text-center font-weight-bold bg-light div-phone">{{ $profile->phone_number }}</div>
                             <div class="border-top border-bottom pt-2 bg-light">|</div>
-                            <div class="col-3 py-2 border-top border-bottom border-right bg-light">
+                            <div class="col-3 py-2 border-top border-bottom bg-light">
                                 <select class="form-control form-control-sm select_profile_status_id" name="profile_status_id" id="status_id">
                                     <optgroup label="New application" id="{{ $profile->id }}">
                                         @foreach ($profileStatuses as $item)
@@ -170,6 +176,11 @@
                                         @endforeach
                                     </optgroup>
                                 </select>
+                            </div>
+                            <div class="border-top border-bottom pt-2 bg-light">|</div>
+                            <div class="col-2 pt-2 border-top border-bottom border-right text-center bg-light div-action">
+                                <a href="/profile/{{$profile->id}}/detail" class="fa fa-eye text-primary" aria-hidden="true"></a>
+                                <a href="/profile/{{$profile->id}}/edit" class="fas fa-edit text-warning px-2" aria-hidden="true"></a>
                             </div>
                         </div>
                         @endforeach
@@ -192,9 +203,9 @@
                             <div class="border-top border-bottom pt-2 bg-light">|</div>
                             <div class="col-3 pt-2 border-top border-bottom text-center font-weight-bold bg-light">{{ $profile->name }}</div>
                             <div class="border-top border-bottom pt-2 bg-light">|</div>
-                            <div class="col-3 pt-2 border-top border-bottom text-center font-weight-bold bg-light">{{ $profile->phone_number }}</div>
+                            <div class="col-3 pt-2 border-top border-bottom text-center font-weight-bold bg-light div-phone">{{ $profile->phone_number }}</div>
                             <div class="border-top border-bottom pt-2 bg-light">|</div>
-                            <div class="col-3 py-2 border-top border-bottom border-right bg-light">
+                            <div class="col-3 py-2 border-top border-bottom bg-light">
                                 <select class="form-control form-control-sm select_profile_status_id" name="profile_status_id" id="status_id">
                                     <optgroup label="New application" id="{{ $profile->id }}">
                                         @foreach ($profileStatuses as $item)
@@ -241,6 +252,11 @@
                                         @endforeach
                                     </optgroup>
                                 </select>
+                            </div>
+                            <div class="border-top border-bottom pt-2 bg-light">|</div>
+                            <div class="col-2 pt-2 border-top border-bottom border-right text-center bg-light div-action">
+                                <a href="/profile/{{$profile->id}}/detail" class="fa fa-eye text-primary" aria-hidden="true"></a>
+                                <a href="/profile/{{$profile->id}}/edit" class="fas fa-edit text-warning px-2" aria-hidden="true"></a>
                             </div>
                         </div>
                         @endforeach
@@ -263,9 +279,9 @@
                             <div class="border-top border-bottom pt-2 bg-light">|</div>
                             <div class="col-3 pt-2 border-top border-bottom text-center font-weight-bold bg-light">{{ $profile->name }}</div>
                             <div class="border-top border-bottom pt-2 bg-light">|</div>
-                            <div class="col-3 pt-2 border-top border-bottom text-center font-weight-bold bg-light">{{ $profile->phone_number }}</div>
+                            <div class="col-3 pt-2 border-top border-bottom text-center font-weight-bold bg-light div-phone">{{ $profile->phone_number }}</div>
                             <div class="border-top border-bottom pt-2 bg-light">|</div>
-                            <div class="col-3 py-2 border-top border-bottom border-right bg-light">
+                            <div class="col-3 py-2 border-top border-bottom bg-light">
                                 <select class="form-control form-control-sm select_profile_status_id" name="profile_status_id" id="status_id">
                                     <optgroup label="New application" id="{{ $profile->id }}">
                                         @foreach ($profileStatuses as $item)
@@ -313,6 +329,11 @@
                                     </optgroup>
                                 </select>
                             </div>
+                            <div class="border-top border-bottom pt-2 bg-light">|</div>
+                            <div class="col-2 pt-2 border-top border-bottom border-right text-center bg-light div-action">
+                                <a href="/profile/{{$profile->id}}/detail" class="fa fa-eye text-primary" aria-hidden="true"></a>
+                                <a href="/profile/{{$profile->id}}/edit" class="fas fa-edit text-warning px-2" aria-hidden="true"></a>
+                            </div>
                         </div>
                         @endforeach
                     </td>
@@ -334,9 +355,9 @@
                             <div class="border-top border-bottom pt-2 bg-light">|</div>
                             <div class="col-3 pt-2 border-top border-bottom text-center font-weight-bold bg-light">{{ $profile->name }}</div>
                             <div class="border-top border-bottom pt-2 bg-light">|</div>
-                            <div class="col-3 pt-2 border-top border-bottom text-center font-weight-bold bg-light">{{ $profile->phone_number }}</div>
+                            <div class="col-3 pt-2 border-top border-bottom text-center font-weight-bold bg-light div-phone">{{ $profile->phone_number }}</div>
                             <div class="border-top border-bottom pt-2 bg-light">|</div>
-                            <div class="col-3 py-2 border-top border-bottom border-right bg-light">
+                            <div class="col-3 py-2 border-top border-bottom bg-light">
                                 <select class="form-control form-control-sm select_profile_status_id" name="profile_status_id" id="status_id">
                                     <optgroup label="New application" id="{{ $profile->id }}">
                                         @foreach ($profileStatuses as $item)
@@ -383,6 +404,11 @@
                                         @endforeach
                                     </optgroup>
                                 </select>
+                            </div>
+                            <div class="border-top border-bottom pt-2 bg-light">|</div>
+                            <div class="col-2 pt-2 border-top border-bottom border-right text-center bg-light div-action">
+                                <a href="/profile/{{$profile->id}}/detail" class="fa fa-eye text-primary" aria-hidden="true"></a>
+                                <a href="/profile/{{$profile->id}}/edit" class="fas fa-edit text-warning px-2" aria-hidden="true"></a>
                             </div>
                         </div>
                         @endforeach

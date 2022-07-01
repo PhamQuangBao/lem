@@ -297,4 +297,16 @@ class ProfileRepository extends BaseRepository implements ProfileRepositoryInter
         }
         return false;
     }
+
+    /**
+     * @param Job_id
+     * 
+     * @return App\Models\Profile
+     */
+    public function getProfileListByJob($id)
+    {
+        $profiles = Profile::where('job_id', $id)->orderBy('submit_date', 'DESC')->paginate(10);
+
+        return $profiles;
+    }
 }

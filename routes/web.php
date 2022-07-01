@@ -63,6 +63,7 @@ Route::group(['prefix' => 'jobs', 'middleware' => 'auth'], function () {
     Route::post('/storeResonse', [JobController::class, 'storeResponses']);
     Route::post('/check-profiles', [JobController::class, 'checkListProfile']);
     Route::post('/save-profiles', [JobController::class, 'saveListProfile']);
+    Route::post('/interview-date', [JobController::class, 'addInterviewDateByJob']);
 });
 
 Route::group(['prefix' => 'profile', 'middleware' => 'auth'], function () {
@@ -72,7 +73,7 @@ Route::group(['prefix' => 'profile', 'middleware' => 'auth'], function () {
     Route::post('/{id}/update', [ProfileController::class, 'update'])->name('admin.cv.update');
     Route::get('/{id}/delete', [ProfileController::class, 'destroy']);
     Route::get('list', [ProfileController::class, 'list']);
-    Route::get('/list/{id}', [ProfileController::class, 'listCvByJob']);
+    Route::get('/list/{id}', [ProfileController::class, 'listProfileByJob']);
     Route::get('{id}/detail', [ProfileController::class,'detail']);
     Route::post('{id}/updateDetail', [ProfileController::class, 'updateDetail']);
     Route::post('/storeInterviewResult', [ProfileController::class, 'storeInterviewResult']);
@@ -89,10 +90,10 @@ Route::group(['prefix' => 'users', 'middleware' => 'auth'], function () {
     Route::get('list', [UserController::class, 'list']);
 });
 
-Route::group(['prefix' => 'profile', 'middleware' => 'auth'], function () {
-    Route::get('edit', [AuthController::class, 'edit']);
-    Route::post('/update', [AuthController::class, 'update'])->name('admin.users.update');
-});
+// Route::group(['prefix' => 'profile', 'middleware' => 'auth'], function () {
+//     Route::get('edit', [AuthController::class, 'edit']);
+//     Route::post('/update', [AuthController::class, 'update'])->name('admin.users.update');
+// });
 
 Route::group(['prefix' => 'charts', 'middleware' => 'auth'], function () {
     Route::get('university', [ChartController::class, 'university']);

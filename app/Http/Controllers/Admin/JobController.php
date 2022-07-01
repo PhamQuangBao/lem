@@ -9,6 +9,7 @@ use App\Repositories\JobRepositoryInterface;
 use App\Repositories\ProfileRepositoryInterface;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Spatie\GoogleCalendar\Event;
 
 class JobController extends Controller
 {
@@ -21,6 +22,7 @@ class JobController extends Controller
     ) {
         $this->jobRepository = $jobRepository;
         $this->profileRepository = $profileRepository;
+        $this->event = new Event;
     }
 
     public function list()
@@ -82,6 +84,10 @@ class JobController extends Controller
     {
         $job_statuses = $this->jobRepository->getJobStatuses();
         $job = $this->jobRepository->findJob($id);
+        $interviewTime = '';
+        if($job->time_at){
+            $interviewTime = Carbon::parse($job->time_at)->format('m/d/Y h:i A');
+        }
         if ($job) {
             $checkHasQuestionResponses = $this->jobRepository->checkJobHasQuestionResponses($id);
             $arrProfileInterview = array();
@@ -126,6 +132,7 @@ class JobController extends Controller
                     'arrProfileInterview' => $arrProfileInterview,
                     'arrProfileOffer' => $arrProfileOffer,
                     'arrProfileUnqualified' => $arrProfileUnqualified,
+                    'interviewTime' => $interviewTime,
                 ]);
             }
             return view('admin.jobs.detail', [
@@ -135,6 +142,7 @@ class JobController extends Controller
                 'arrProfileInterview' => $arrProfileInterview,
                 'arrProfileOffer' => $arrProfileOffer,
                 'arrProfileUnqualified' => $arrProfileUnqualified,
+                'interviewTime' => $interviewTime,
             ]);
         } else {
             return redirect()->back()->with('error', 'Job not found!');
@@ -207,6 +215,68 @@ class JobController extends Controller
         }
     }
 
+    public function addInterviewDateByJob(Request $request)
+    {
+        if(isset($request->interviewTime)){
+            $interviewDate = $request->interviewTime;
+            $jobId = $request->jobId;
+            $jobs = $this->jobRepository->find($jobId);
+
+            if(count($jobs->Profile) != 0){
+                
+                $dataInterview['time_at'] = Carbon::parse($interviewDate);
+                $dataInterview['time_end'] = Carbon::parse($interviewDate)->addHour();
+                $nameEvent = 'Group interview -' . $jobs->Branches->name;
+                if($jobs->calendar_key){
+                    //update calendar
+                    if($jobs->time_at != $dataInterview['time_at']){
+                        $event = Event::find($jobs->calendar_key);
+                        $event->update(['name' =>  $nameEvent, 'startDateTime' => $dataInterview['time_at'], 'endDateTime' => $dataInterview['time_end']]);
+                        $this->jobRepository->update($jobId, ['time_at' => $dataInterview['time_at'], 'time_end' => $dataInterview['time_end']]);
+                    }
+
+                    //update profile list not calendar
+                    foreach($jobs->Profile as $key => $profile){
+                        $dataInterview = [
+                            'time_at' =>  $dataInterview['time_at'],
+                            'time_end' =>  $dataInterview['time_end'],
+                        ];
+                        //Create or update  Interview
+                        
+                        if($profile->calendar_key == ""){
+                            $profile->update($dataInterview);
+                        }
+                    }
+                }
+                else{
+                    //Set Calendar Google
+                    $this->event->name = $nameEvent;
+                    $this->event->startDateTime = $dataInterview['time_at'];
+                    $this->event->endDateTime = $dataInterview['time_end'];
+                    $calendar_key = $this->event->save()->id;
+                    
+                    
+                    foreach($jobs->Profile as $key => $profile){
+                        $dataInterview = [
+                            'time_at' =>  $dataInterview['time_at'],
+                            'time_end' =>  $dataInterview['time_end'],
+                        ];
+                        
+                        if($profile->calendar_key == ""){
+                            $profile->update($dataInterview);
+                        }
+                    }
+                    $this->jobRepository->update($jobId, ['calendar_key' => $calendar_key, 'time_at' => $dataInterview['time_at'], 'time_end' => $dataInterview['time_end']]);
+                }
+                
+                return redirect()->back()->with('success', ' Save Interview Date is successfully!');
+            }else{
+                return redirect()->back()->with('error', " Can't find  Profiles to save Interview Date!");
+            }
+        }
+        return redirect()->back()->with('error', ' Save Interview Date has something wrong!');
+    }
+
     public function importResponses(Request $request)
     {
         $file = $request->file('fileUpload');
@@ -232,25 +302,45 @@ class JobController extends Controller
                 }
             }
         }
+        
         //check job exists
         $job_statuses = $this->jobRepository->getJobStatuses();
         $job = $this->jobRepository->find($request->jobId);
+        //time calendar
+        $interviewTime = '';
+        if($job->time_at){
+            $interviewTime = Carbon::parse($job->time_at)->format('m/d/Y h:i A');
+        }
         if ($job) {
-            // $jobInterviews = $this->interviewRepo->getInterviewsByJob($request->jobId);
-            // $offerJobs = array();
-            // foreach ($jobInterviews as $jobInterview) {
-            //     if ($jobInterview->salary_offer) {
-            //         $offerJobs[] = $jobInterview->salary_offer;
-            //     }
-            // }
+            $arrProfileInterview = array();
+            $arrProfileOffer = array();
+            $arrProfileUnqualified = array();
+            foreach($job->Profile as $key => $item){
+                $idStatusGroups = $item->profileStatus->profile_status_group_id;
+
+                // Profile Interview
+                if($idStatusGroups == 2){
+                    $arrProfileInterview[] = $item;
+                }
+                // Profile Unqualified
+                if($idStatusGroups == 3){
+                    $arrProfileUnqualified[] = $item;
+                }
+                // Profile Offer
+                if($idStatusGroups == 4){
+                    $arrProfileOffer[] = $item;
+                }
+            }
             return view('admin.jobs.detail', [
                 'title' => 'Job Detail',
                 'job' => $job,
                 'job_statuses' => $job_statuses,
                 'arrAnswer' => $arrAnswer,
                 'arrQuestion' => $arrQuestion,
-                // 'countInterviewsByJobs' => count($jobInterviews),
-                // 'countOfferByJobs' => count($offerJobs),
+                'arrProfileInterview' => $arrProfileInterview,
+                'arrProfileOffer' => $arrProfileOffer,
+                'arrProfileUnqualified' => $arrProfileUnqualified,
+                'interviewTime' => $interviewTime,
                 'addResponses' => true
             ]);
         } else {
@@ -318,10 +408,8 @@ class JobController extends Controller
                     'phone_number' => $profile->answer_4,
                     'name' => $profile->answer_2,
                     'job_id' => $job_id,
-                    // 'university_id' => $this->checkUniversity($profile->answer_5)['id'],
-                    // 'university_name'=>$this->checkUniversity($profile->answer_5)['name'],
-                    // 'channel_id' => $this->checkChannels($profile->answer_6)['id'],
-                    // 'channel_name' => $this->checkChannels($profile->answer_6)['name'],
+                    'university_id' => $this->checkUniversity($profile->answer_5)['id'],
+                    'university_name'=>$this->checkUniversity($profile->answer_5)['name'],
                     'profile_status_id' => 3,
                     'link' => end($profile),
                     'year_of_experience' => 0,
@@ -407,7 +495,7 @@ class JobController extends Controller
      * @return array['id'=> $idChannel, 'name'=> $channelName]
      */
     public function checkChannels($strChannel){
-        $listChannels = $this->internCvRepository->getChannels();
+        $listChannels = $this->CvRepository->getChannels();
         $idChannel = 1;
         $channelName = "";
         foreach($listChannels as $channel){
@@ -425,7 +513,7 @@ class JobController extends Controller
     //  * @return array['id'=> $idUniversity, 'name'=> $universityName]
     //  */
     // public function checkUniversity($strUniversity){
-    //     $listUniversitys = $this->internCvRepository->getUniversities();
+    //     $listUniversitys = $this->CvRepository->getUniversities();
     //     $idUniversity = 1;
     //     $universityName = "";
     //     foreach($listUniversitys as $university){
@@ -447,7 +535,7 @@ class JobController extends Controller
         $idUniversity = 1;
         $universityName = "";
         foreach($listUniversitys as $university){
-            if(strpos($university->name, '(')){
+            if(strpos($university->name, '(') !== FALSE){
                 $temp = substr($university->name, strpos($university->name, '(') + 1, strlen($university->name) - (strpos($university->name, '(') + 1) - 1);
                 
                 if(strpos($strUniversity, $temp) !== FALSE){

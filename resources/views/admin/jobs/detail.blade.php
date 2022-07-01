@@ -3,6 +3,8 @@
 <link rel="stylesheet" href="/template/admin/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
 <link rel="stylesheet" href="/template/admin/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
 <link rel="stylesheet" href="/template/admin/plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
+<!-- Tempusdominus Bootstrap 4 Date Time -->
+<link rel="stylesheet" href="/template/admin/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
 <style>
     fieldset {
         background-repeat: no-repeat;
@@ -79,14 +81,16 @@
             <div class="col-md-6">
                 <div class="form-group">
                     <label>Status</label>
-                    <select class="form-control" style="max-width: 75%;" name="job_status_id" id="job_status_id">
-                        @foreach ($job_statuses as $status)
-                        <option @if ($status->id == $job->job_status_id) selected @endif value="{{$status->id}}">
-                            {{$status->name}}
-                        </option>
-                        @endforeach
-                    </select>
-                    <div class="input-group-append" id="div-submits-job-status">
+                    <div class="input-group">
+                        <select class="form-control" style="max-width: 60%;" name="job_status_id" id="job_status_id">
+                            @foreach ($job_statuses as $status)
+                            <option @if ($status->id == $job->job_status_id) selected @endif value="{{$status->id}}">
+                                {{$status->name}}
+                            </option>
+                            @endforeach
+                        </select>
+                        <div class="input-group-append" id="div-submits-job-status">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -122,10 +126,34 @@
                     <textarea class="form-control" name="description" rows="3" readonly>{{ $job->description }}</textarea>
                 </div>
             </div>
-            <div class="col-md-12 text-center">
-                <button type="submit" id="submits" class="btn btn-primary">Save</button>
-                <a type="button" href="/jobs/list" class="btn btn-default">Cancel</a>
+        </div>
+    </form>
+    <form action="/jobs/interview-date" method="post">
+        @csrf
+        <div class="row">
+            @if(count($job->Profile) != 0)
+            <div class="col-md-6"></div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label>Interview Time:</label>
+                    <div class="input-group date" id="reservationdatetime" data-target-input="nearest">
+                        <input type="text" class="form-control datetimepicker-input  @error('interviewTime') is-invalid @enderror" data-target="#reservationdatetime" name="interviewTime" id="interviewTime" value="@if(old('interviewTime')){{old('interviewTime')}}@else{{$interviewTime}}@endif" />
+                        <div class="input-group-append" data-target="#reservationdatetime" data-toggle="datetimepicker">
+                            <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                        </div>
+                        <button type="submit" id="submits-interview-date" class="btn btn-primary" disabled>Save</button>
+                    </div>
+                    <input type="hidden" value="{{ $job->id }}" name="jobId">
+                    @error('interviewTime')
+                    <span class="error invalid-feedback" role="alert">
+                        <strong>{{ $message }}</strong>
+                    </span>
+                    @enderror
+                </div>
+                </div>
             </div>
+            <div class="col-md-2"></div>
+            @endif
         </div>
     </form>
     <fieldset class="border bg-light px-5">
@@ -235,8 +263,16 @@
 <script src="/template/admin/plugins/datatables-buttons/js/buttons.print.min.js"></script>
 <script src="/template/admin/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
 <script src="/template/admin/dist/js/adminlte.min.js?v=3.2.0"></script>
+<!-- Tempusdominus Bootstrap 4 Date Time-->
+<script src="/template/admin//plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
 <script>
-    $('#submits').attr('disabled', true);
+    //Date and time picker
+    $('#reservationdatetime').datetimepicker({
+        icons: {
+            time: 'far fa-clock'
+        }
+    });
+    
     $('.form-control').change(function() {
         //set button submit is eneble if all value is not null
         if ($('#job_status_id').val() != '') {
@@ -275,7 +311,14 @@
             $('#div-submits-job-status').empty();
         }
     });
-
+    // show and hide button Save for Interview Time
+    $('#interviewTime').blur(function() {
+        if( $(this).val().length !== 0 ) {
+            $('#submits-interview-date').attr('disabled', false);
+        }else{
+            $('#submits-interview-date').attr('disabled', true);
+        }
+    });
     $('#example').DataTable( {
         "order": [[ 1, "desc" ]],
         "scrollX": true,

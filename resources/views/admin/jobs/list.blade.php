@@ -14,7 +14,7 @@
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-    .th-quanlity-cv{
+    .th-quanlity-profile{
         max-width: 100px;
     }
 </style>
@@ -81,6 +81,7 @@
                                     <th>Job Description</th>
                                     <th>Status</th>
                                     <th>Skill</th>
+                                    <th class="th-quanlity-profile">Total Profiles</th>
                                     <th>Request at</th>
                                     <th>Actions</th>
                                 </tr>
@@ -95,6 +96,7 @@
                                     <td id="description" class="text-left">{{ $job->description }}</td>
                                     <td class="@if($job->JobStatuses->id == 1) text-success @else @if($job->JobStatuses->id == 2) text-danger @else text-warning @endif @endif">{{ $job->JobStatuses->name }}</td>
                                     <td>{{ $job->Branches->name }}</td>
+                                    <td><a href="/profile/list/{{$job->id}}" target="_blank">{{ count($job->Profile) }}</a></td>
                                     <td>{{ $job->request_date }}</td>
                                     <td class="align-middle">
                                         <a href="/jobs/{{$job->id}}/detail" class="fa fa-eye text-primary" aria-hidden="true"></a>

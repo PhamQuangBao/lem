@@ -46,14 +46,20 @@ class ProfileController extends Controller
         ]);
     }
 
+    /**
+     * Call the route cv list again and pass the variable Session id
+     * 
+     */
+    public function listProfileByJob($id)
+    {
+        return redirect('/profile/list?jobIdCallBack=' . $id);
+    }
+
     public function list()
     {
         if (isset($_GET['jobIdCallBack'])) {
             //action to see profiles when click total profile in job list
             $profiles = $this->profileRepository->getProfileListByJob($_GET['jobIdCallBack']);
-        } else {
-            //Get all profiles list
-            $profiles = $this->profileRepository->getProfilePaginate();
         }
         $jobs = $this->jobRepository->getJobs();
         $branches = $this->profileRepository->getBranches();
@@ -171,7 +177,7 @@ class ProfileController extends Controller
         if ($id < 2147483647 && $id > 0) {
             $profile = $this->profileRepository->find(intval($id));
             if ($profile) {
-                // dd($interview);
+                // dd($profile);
                 $profileStatuses = $this->profileRepository->getProfileStatuses();
                 $branches = $this->profileRepository->getBranches();
                 $job = $this->jobRepository->findJob($profile->job_id);
@@ -261,8 +267,9 @@ class ProfileController extends Controller
                 $dataInterview['time_end'] = Carbon::parse($data['interviewTime'])->addHour();
                 $skills =  $this->jobRepository->find($data['job_id'])->Branches;
                 $nameEvent = 'Interview - ' . $skills->name . ' - ' . $data['name'];
-                //Interview ID is null
-                if ($profile->time_at == null) {
+                //Interview calendar_key is null
+                if ($profile->calendar_key == null) {
+                    
                     $this->event->name = $nameEvent;
                     $this->event->startDateTime = $dataInterview['time_at'];
                     $this->event->endDateTime = $dataInterview['time_end'];
@@ -275,9 +282,9 @@ class ProfileController extends Controller
                         'time_end' =>  $dataInterview['time_end'],
                     ];
                     $updateProfile = $this->profileRepository->update($profile->id, $dataInterview);
-                } elseif ($profile->time_at != $dataInterview['time_at']) {
+                } else {
                     //update Calendar
-                    if (isset($profile->calendar_key)) {
+                    if (isset($profile->calendar_key) || ($profile->time_at != $dataInterview['time_at'])) {
                         $event = Event::find($profile->calendar_key);
                         $event->update(['name' =>  $nameEvent, 'startDateTime' => $dataInterview['time_at'], 'endDateTime' => $dataInterview['time_end']]);
                     }

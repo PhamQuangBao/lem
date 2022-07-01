@@ -21,6 +21,9 @@ class Jobs extends Model
         'close_date',
         'branch_id',
         'description',
+        'calendar_key',
+        'time_at',
+        'time_end',
     ];
 
     /**

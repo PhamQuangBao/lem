@@ -60,6 +60,9 @@ class ProfileController extends Controller
         if (isset($_GET['jobIdCallBack'])) {
             //action to see profiles when click total profile in job list
             $profiles = $this->profileRepository->getProfileListByJob($_GET['jobIdCallBack']);
+        }else {
+            //Get all profile list
+            $profiles = $this->profileRepository->getProfilePaginate();
         }
         $jobs = $this->jobRepository->getJobs();
         $branches = $this->profileRepository->getBranches();

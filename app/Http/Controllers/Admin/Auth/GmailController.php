@@ -102,7 +102,6 @@ class GmailController extends Controller
 
                     $jobIDs[] = $jobID;
                     $jobKeys[] = $jobKey;
-
                     $fromNames[] = $mail->getFromName();
                     $fromMails[] = $mail->getFromEmail();
                     $numAttachments[] = count($mail->getAttachments());
@@ -324,7 +323,7 @@ class GmailController extends Controller
         
         // $profileForEmails[][] ;
         $i = 0;
-        dd($selectMailIDs);
+        // dd($selectMailIDs);
         foreach($mailIDs as $key => $mailID){
             //Check mail has checked and not attachment
             if (in_array($mailID, $selectMailIDs)) {

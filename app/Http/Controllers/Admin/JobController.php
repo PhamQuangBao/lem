@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreJobRequest;
 use App\Http\Requests\UpdateJobRequest;
+use App\Repositories\InterviewRepositoryInterface;
 use App\Repositories\JobRepositoryInterface;
+use App\Repositories\ProfileHistoryRepositoryInterface;
 use App\Repositories\ProfileRepositoryInterface;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Spatie\GoogleCalendar\Event;
+use File;
 
 class JobController extends Controller
 {
@@ -19,10 +22,14 @@ class JobController extends Controller
     public function __construct(
         JobRepositoryInterface $jobRepository,
         ProfileRepositoryInterface $profileRepository,
+        ProfileHistoryRepositoryInterface $profileHistoryRepo,
+        InterviewRepositoryInterface $interviewRepo,
     ) {
         $this->jobRepository = $jobRepository;
         $this->profileRepository = $profileRepository;
         $this->event = new Event;
+        $this->profileHistoryRepo = $profileHistoryRepo;
+        $this->interviewRepo = $interviewRepo;
     }
 
     public function list()
@@ -425,12 +432,18 @@ class JobController extends Controller
                     }
                 }
                 //check is exits email
-                if(!$this->profileRepository->checkEmailIsExits($data['mail'])){
+                $checkExitsEmail = $this->profileRepository->checkEmailIsExits($data['mail']);
+                if(!$checkExitsEmail){
                     if(empty($data['status'])){
                         $data['status'] = 'saved';
                     }
                 }else{
-                    $data['status'] = 'exits';
+                    if($checkExitsEmail->profileStatus->profile_status_group_id == 3){
+                        $data['status'] = 'unqualified';
+                    }
+                    else {
+                        $data['status'] = 'exits';
+                    }
                 }
                 array_push($listResults, $data);
                 $data = array();
@@ -450,11 +463,53 @@ class JobController extends Controller
             $listRequestSelectSave = $request->selectSave;
             $count = 0;
             //save list Profiles
+            
             for ($i=0; $i < count($listRequestSelectSave) ; $i++) { 
                 $profile = json_decode($listRequestSelectSave[$i]);
                 if(!$this->profileRepository->checkEmailIsExits($profile->mail) && empty($data["status"])){
                     $this->profileRepository->create((array) $profile);
                     $count++;
+                }
+                //save email exit with status profile unqualified
+                if($profile->status == "unqualified"){
+                    $profileUnqualified = $this->profileRepository->checkEmailIsExits($profile->mail);
+                    $dataProfileHistory = [
+                        'profile_data' => json_encode($profileUnqualified),
+                        'mail' => $profileUnqualified->mail,
+                    ];
+                    $profileHistory = $this->profileHistoryRepo->create($dataProfileHistory);
+                    
+                    //delete file
+                    $files = $this->profileRepository->findFiles($profileUnqualified->id);
+                    // dd($files);
+                    if ($files) {
+                        
+                        foreach($files as $key => $file){
+                            $path_file = 'uploads/profile/';
+                            $file_path = public_path($path_file . $file->file);
+                            if (File::exists($file_path)){
+                                File::delete($file_path);
+                            }else{
+                                File::delete(storage_path($path_file . $file->file));
+                            }
+                            $files[$key]->delete();
+                        }
+                    }
+                    
+
+                    //find intervew profile and delete
+                    $interview = $this->interviewRepo->findByProfileId($profileUnqualified->id);
+                    if($interview){
+                        $interview->delete();
+                    }
+
+                    //create new profile 
+                    $this->profileRepository->create((array) $profile);
+                    $count++;
+
+                    //delete profile
+                    $profileUnqualified->delete();
+
                 }
             }
             return redirect('/jobs/'. $profile->job_id .'/detail')->with('success', 'Save '.$count.' is successfully!');

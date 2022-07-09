@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             UserRoleSeeder::class,
             UserSeeder::class,
             JobStatusSeeder::class,
+            LevelSeeder::class,
             BranchSeeder::class,
             ProfileStatusGroupSeeder::class,
             ProfileStatusSeeder::class,

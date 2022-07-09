@@ -180,11 +180,11 @@
             </div>
         </form>
         @isset($arrQuestion)
-            <div style="float:left; margin-left:40%">
+            <!-- <div style="float:left; margin-left:40%">
                 <a class="btn" style="background-color:#ff9999">
                 <i></i>
                 </a> Email exits
-            </div>
+            </div> -->
             <form action="/jobs/check-profiles" target="_blank" method="post">
                 @csrf
                 <input type="hidden" name="job_id" value="{{ $job->id }}">
@@ -202,7 +202,8 @@
                     <tbody>
                         @if (isset($arrAnswer) && !empty($arrAnswer))
                             @for ($y = 0; $y < count($arrAnswer); $y++)
-                                <tr @if (isset($arrAnswer[$y]['check']) && $arrAnswer[$y]['check'] === true ) style='background-color:#ff9999' @endif>
+                                <!-- <tr @if (isset($arrAnswer[$y]['check']) && $arrAnswer[$y]['check'] === true ) style='background-color:#ff9999' @endif> -->
+                                <tr @if (isset($arrAnswer[$y]['check']) && $arrAnswer[$y]['check'] === true ) style='' @endif>
                                     @if (request()->is('jobs/'. $job->id .'/detail*'))
                                         <div >
                                             <td class="text-center"><input type="checkbox" name="selectSave[]" id="" value="{{ json_encode($arrAnswer[$y]) }}"></td>

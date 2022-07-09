@@ -77,6 +77,7 @@ Route::group(['prefix' => 'profile', 'middleware' => 'auth'], function () {
     Route::get('{id}/detail', [ProfileController::class,'detail']);
     Route::post('{id}/updateDetail', [ProfileController::class, 'updateDetail']);
     Route::post('/storeInterviewResult', [ProfileController::class, 'storeInterviewResult']);
+    Route::get('{id}/history', [ProfileController::class,'historyDetail']);
 });
 
 Route::group(['prefix' => 'users', 'middleware' => 'auth'], function () {

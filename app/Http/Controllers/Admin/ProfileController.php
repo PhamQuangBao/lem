@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProfileRequest;
 use App\Http\Requests\UpdateProfileRequest;
+use App\Repositories\InterviewRepositoryInterface;
 use App\Repositories\JobRepositoryInterface;
 use App\Repositories\ProfileForEmailRepositoryInterface;
+use App\Repositories\ProfileHistoryRepositoryInterface;
 use App\Repositories\ProfileRepositoryInterface;
 use Carbon\Carbon;
 use File;
@@ -23,12 +25,16 @@ class ProfileController extends Controller
     public function __construct(
         ProfileRepositoryInterface $profileRepository,
         JobRepositoryInterface $jobRepository,
-        ProfileForEmailRepositoryInterface $profileForEmailRepo
+        ProfileForEmailRepositoryInterface $profileForEmailRepo,
+        InterviewRepositoryInterface $interviewRepo,
+        ProfileHistoryRepositoryInterface $profileHistoryRepo,
     ) {
         $this->profileRepository = $profileRepository;
         $this->jobRepository = $jobRepository;
         $this->profileForEmailRepo = $profileForEmailRepo;
         $this->event = new Event;
+        $this->interviewRepo = $interviewRepo;
+        $this->profileHistoryRepo = $profileHistoryRepo;
     }
 
     public function add()
@@ -47,7 +53,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Call the route cv list again and pass the variable Session id
+     * Call the route profile list again and pass the variable Session id
      * 
      */
     public function listProfileByJob($id)
@@ -180,11 +186,24 @@ class ProfileController extends Controller
         if ($id < 2147483647 && $id > 0) {
             $profile = $this->profileRepository->find(intval($id));
             if ($profile) {
-                // dd($profile);
+                $interview = $this->interviewRepo->findByPRofileId(intval($id));
+
                 $profileStatuses = $this->profileRepository->getProfileStatuses();
                 $branches = $this->profileRepository->getBranches();
                 $job = $this->jobRepository->findJob($profile->job_id);
+                $levels = $this->interviewRepo->getLevels();
 
+                //find history profile
+                $profileHistory = $this->profileHistoryRepo->findProfileByEmail($profile->mail);
+                $historyId = 0;
+                if($profileHistory){
+                    // $dataHistory = json_decode($profileHistory);
+                    $historyId = $profileHistory->id;
+
+                    $profileHistory = json_decode($profileHistory->profile_data);
+                    
+                }
+                if($interview){
                     return view('admin.profile.detail', [
                         'title'     => 'profile DETAIL',
                         'id'        => intval($id),
@@ -192,12 +211,62 @@ class ProfileController extends Controller
                         'job'       => $job,
                         'profileStatuses' => $profileStatuses,
                         'branches'    => $branches,
+                        'levels'    => $levels,
+                        'interview' => $interview,
+                        'profileHistory' => $profileHistory,
+                        'historyId' => $historyId,
                     ]);
+                }
+                return view('admin.profile.detail', [
+                    'title'     => 'profile DETAIL',
+                    'id'        => intval($id),
+                    'profile'        => $profile,
+                    'job'       => $job,
+                    'profileStatuses' => $profileStatuses,
+                    'branches'    => $branches,
+                    'levels'    => $levels,
+                    'profileHistory' => $profileHistory,
+                    'historyId' => $historyId,
+                ]);
             } else {
                 return redirect()->back()->with('error', 'profile not found!');;
             }
         } else {
             return redirect()->back()->with('error', 'id out of range profile!');
+        }
+    }
+
+    public function storeInterviewResult(Request $request)
+    {
+        //get data to update profile
+        $dataUpdateProfile = $request->only(['salary_offer', 'onboard_date']);
+
+        //get data in the add or update Interview
+        $dataAddNewInterview = $request->except(['salary_offer']);
+        //  dd($dataAddNewInterview);
+        $interview = $this->interviewRepo->findByProfileId($dataAddNewInterview['profile_id']);
+       
+        // dd($interview);
+
+        //update profile and create Interview
+        $profile_update = $this->profileRepository->update($request->profile_id, $dataUpdateProfile);
+        //if exit interviewed then update interview and calendar
+        if ($interview) {
+            $interviewStore = $this->interviewRepo->update($interview->id, $dataAddNewInterview);
+            //return message
+            if ($profile_update && $interviewStore) {
+                return redirect()->back()->with('success', 'Update Interview Result Success!');
+            } else {
+                return redirect()->back()->with('error', 'Update Interview Result has something wrong!!');
+            }
+        } else {
+            $interviewStore = $this->interviewRepo->create($dataAddNewInterview);
+            //return message
+            if ($profile_update && $interviewStore) {
+                return redirect()->back()->with('success', 'Add Interview Result Success!');
+            } else {
+                return redirect()->back()->with('error', 'Add Interview Result has something wrong!!');
+            }
         }
     }
 
@@ -439,6 +508,30 @@ class ProfileController extends Controller
             } else {
                 return redirect()->back()->with(['error' => 'The Profile has been deleted or has something wrong!']);
             }
+        }
+    }
+
+    public function historyDetail($id)
+    {
+        $profileHistory = $this->profileHistoryRepo->find($id);
+        $profileStatuses = $this->profileRepository->getProfileStatuses();
+        $jobs = $this->jobRepository->getJobWithBranchOnAddProfile();
+        $universities = $this->profileRepository->getUniversities();
+        if($profileHistory){
+
+            // $dataHistory = json_decode($profileHistory);
+            $profileHistory = json_decode($profileHistory->profile_data);
+                
+            // dd($profileHistory);
+            return view('admin.profile.history', [
+                'title'     => 'Profile History DETAIL',
+                'profile' => $profileHistory,
+                'profileStatuses' => $profileStatuses,
+                'jobs' => $jobs,
+                'universities' => $universities,
+            ]);
+        }else{
+            return redirect()->back()->with('error', 'id out of range profile History!');
         }
     }
 }

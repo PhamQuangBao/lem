@@ -32,7 +32,7 @@ class HomeController extends Controller
         $profilesInp = $this->profileRepository->getAllProfileStatusInProWithJobOpen();
         $profilesUnqualified = $this->profileRepository->getAllProfileStatusUnqualifiedWithJobOpen();
         $profilesQualified = $this->profileRepository->getAllProfileStatusQualifiedWithJobOpen();
-
+// dd($profilesQualified);
         // dd($this->userRepository->getRolesIDByUserID(2, [2]));
         return view('admin.home.home', [
             'title' => 'Home page',

@@ -23,9 +23,12 @@ class Profile extends Model
         'phone_number',
         'mail',
         'address',
+        'link',
         'profile_status_id',
         'language_id',
         'university_id',
+        'salary_offer',
+        'onboard_date',
         'year_of_experience',
         'note',
         'calendar_key',
@@ -66,5 +69,14 @@ class Profile extends Model
     public function profileUniversities()
     {
         return $this->hasOne(Universities::class, 'id', 'university_id');
+    }
+
+    /**
+     * Relationship: Cv - Interviews : 1 - 1
+     *
+     */
+    public function interviews()
+    {
+        return $this->hasOne(Interviews::class, 'id', 'cv_id');
     }
 }

@@ -26,6 +26,9 @@
       <a class="btn" style="background-color:whitesmoke">
         <i></i>
       </a> Valid Profile
+      <a class="btn" style="background-color:#6c757d">
+        <i></i>
+      </a> Email exits Unqualified
     </div>
   </div>
   <!-- /.card-header -->
@@ -51,6 +54,8 @@
                             <tr style="background-color:#F0E68C">
                         @elseif ($item['status'] == 'exits')
                             <tr style="background-color:#ff9999">
+                        @elseif ($item['status'] == 'unqualified')
+                            <tr style="background-color:#6c757d">
                         @else
                             <tr style="background-color:whitesmoke">
                         @endif

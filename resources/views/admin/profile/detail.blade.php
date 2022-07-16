@@ -477,7 +477,7 @@
     });
 
     $('#submit2').attr('disabled', true);
-    $('#formInterview').change(function() {
+    $('#formInterview').click(function() {
         var check2 =  $(".not-empty").filter(function () {
             return $.trim($(this).val()).length == 0
         }).length == 0;

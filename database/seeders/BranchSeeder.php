@@ -50,9 +50,37 @@ class BranchSeeder extends Seeder
             [
                 'id' => '9',
                 'name' => 'Test',
-            ], 
+            ],  
             [
                 'id' => '10',
+                'name' => 'Marketing',
+            ], 
+            [
+                'id' => '11',
+                'name' => 'Automation Test',
+            ],
+            [
+                'id' => '12',
+                'name' => 'Translator',
+            ],
+            [
+                'id' => '13',
+                'name' => 'Security',
+            ], 
+            [
+                'id' => '14',
+                'name' => 'Designer',
+            ],
+            [
+                'id' => '15',
+                'name' => 'HR recruiter',
+            ], 
+            [
+                'id' => '16',
+                'name' => 'Finance Manager',
+            ],
+            [
+                'id' => '17',
                 'name' => 'Unknown',
             ],
         ]);

@@ -119,56 +119,181 @@ class GmailController extends Controller
                     // return 4: 0912-345-678
                     // else return: 000000000
                     $textBody = $mail->getPlainTextBody();
+                    $textBodyToLower = strtolower($textBody);
                     // dd(substr_count($textBody, "\r\n"));
+                    // dd($fromMails[$key]);
                     // dd($textBody);
 
+                    //Cut string --- Forwarded message ---
+                    while(true){
+                        if(strpos($textBody, 'Forwarded message') !== false){
+                            $textBody = substr($textBody, strpos($textBody, 'To:'), strlen($textBody) - strpos($textBody, 'To:'));
+                            $textBody = substr($textBody, strpos($textBody, "\r\n"), strlen($textBody) - strpos($textBody, "\r\n"));
+                        }else{
+                            break;
+                        }
+                    }
+
+                    // dd($textBody);
+
+                    preg_match_all('/[a-z0-9_\-\+\.]+@[a-z0-9\-]+\.([a-z]{2,4})(?:\.[a-z]{2})?/i', $textBody, $matches);
+                    $matches = $matches[0];
+
+                    // dd($matches);
+
+                    if(strpos($textBody, 'Email:') !== false){
+                        $indexEmail = strpos($textBody, 'Email:') + 6;
+                        $email = '';
+                        foreach ($matches as $value){
+                            if($indexEmail - strpos($textBody, $value) < 0){
+                                $email = $value;
+                                break;
+                            }
+                        }
+                        
+                        if($email != $fromMails[$key]){
+                            $fromMails[$key] = $email;
+                        }
+                    }else{
+                        if(count($matches) == 1){
+                            if($matches[0] != $fromMails[$key]){
+                                $fromMails[$key] = $matches[0];
+                            }
+                        }
+
+                        if(count($matches) == 2){
+                            $arrTempEmail = array();
+                            foreach($matches as $item){
+                                if($item != $fromMails[$key]){
+                                    array_push($arrTempEmail, $item);
+                                }
+                            }
+                            if(count($matches) == 1){
+                                $fromMails[$key] = $matches[0];
+                            }
+                        }
+
+                        if(count($matches) > 2){
+                            $arrTempEmail = array();
+                            foreach($matches as $item){
+                                if(strpos($textBody, 'From:') !== false){
+                                    $indexEmail = strpos($textBody, 'From:') + 6;
+                                    $email = '';
+                                    foreach ($matches as $value){
+                                        if($indexEmail - strpos($textBody, $value) < 0){
+                                            array_push($arrTempEmail, $item);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                     // $matches = array();
 
-                    // // returns all results in array $matches
-                    // preg_match_all('/[0-9]{3}[\-][0-9]{6}|[0-9]{3}[\s][0-9]{6}|[0-9]{3}[\s][0-9]{3}[\s][0-9]{4}|[0-9]{9}|[0-9]{3}[\-][0-9]{3}[\-][0-9]{4}/', $text, $matches);
-                    // $matches = $matches[0];
+                    // returns all results in array $matches
+                    // preg_match_all('/[0-9]{3}[\-][0-9]{6}|[0-9]{3}[\s][0-9]{6}|[0-9]{3}[\s][0-9]{3}[\s][0-9]{4}|[0-9]{9}|[0-9]{3}[\-][0-9]{3}[\-][0-9]{4}/', $textBody, $matchess);
+                    preg_match_all('/\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})/', $textBody, $matchess);
+                    $arrPhone = $matchess[0];
 
-                    preg_match(
-                        '/[0-9]{10}|[0-9]{2}[\s][0-9]{9}|[0-9]{3}[\s][0-9]{9}|[0-9]{9}|[0-9]{4}[\s][0-9]{3}[\s][0-9]{3}|[0-9]{4}[\-][0-9]{3}[\-][0-9]{3}/',
-                        $textBody,
-                        $phoneMails
-                    );
-                    if (isset($phoneMails[0])) {
-                        $phones[] = $phoneMails[0];
-                    } else {
+                    // dd($arrPhone);
+
+                    if(count($arrPhone) == 0){
                         $phones[] = '0000000000';
                     }
+                    elseif(count($arrPhone) == 1){
+                        $phones[] = $arrPhone[0];
+                    }else{
+                        if(strpos($textBody, 'Phone:') !== false){
+                            $indexPhone = strpos($textBody, 'Phone:') + 6;
+                            $phone = '';
+                            foreach ($arrPhone as $value){
+                                if($indexPhone - strpos($textBody, $value) < 0){
+                                    $phone = $value;
+                                    break;
+                                }
+                            }
+                            
+                            $phones[] = $phone;
+                        }
+                        else{
+                            $phones[] = '0000000000';
+                        }
+                    }
+
+                    // Name 
+                    // preg_match_all('/[A-Z]{1,1}[a-z]*([\s][A-Z]{1,1}[a-z]*)*([\s][A-Z]{1,1}[a-z]*)/', $textBody, $names);
+                    preg_match_all('/[A-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂẾưăạảấầẩẫậắằẳẵặẹẻẽềềểếỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỬỮỰỲỴÝỶỸửữựỳỵỷỹ]{1,1}[a-zÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂẾưăạảấầẩẫậắằẳẵặẹẻẽềềểếỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỬỮỰỲỴÝỶỸửữựỳỵỷỹ]*([\s][A-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂẾưăạảấầẩẫậắằẳẵặẹẻẽềềểếỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỬỮỰỲỴÝỶỸửữựỳỵỷỹ]{1,1}[a-zÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂẾưăạảấầẩẫậắằẳẵặẹẻẽềềểếỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỬỮỰỲỴÝỶỸửữựỳỵỷỹ]*)*([\s][A-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂẾưăạảấầẩẫậắằẳẵặẹẻẽềềểếỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỬỮỰỲỴÝỶỸửữựỳỵỷỹ]{1,1}[a-zÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂẾưăạảấầẩẫậắằẳẵặẹẻẽềềểếỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỬỮỰỲỴÝỶỸửữựỳỵỷỹ]*)/', $textBody, $names);
+                    $names = $names[0];
+                    
+                    // dd($names);
+                    if(strpos($textBody, 'Name:') !== false){
+                        $indexName = strpos($textBody, 'Name:') + 5;
+                        
+                        $name = '';
+                        foreach ($names as $value){
+                            if($indexName - strpos($textBody, $value) < 0){
+                                
+                                $name = $value;
+                                break;
+                            }
+                        }
+
+                        $fromNames[$key] = $name;
+                    }
+
+
+                    // preg_match(
+                    //     '/[0-9]{10}|[0-9]{2}[\s][0-9]{9}|[0-9]{3}[\s][0-9]{9}|[0-9]{9}|[0-9]{4}[\s][0-9]{3}[\s][0-9]{3}|[0-9]{4}[\-][0-9]{3}[\-][0-9]{3}/',
+                    //     $textBody,
+                    //     $phoneMails
+                    // );
+                    
+                    // if (isset($phoneMails[0])) {
+                    //     $phones[] = $phoneMails[0];
+                    // } else {
+                    //     $phones[] = '0000000000';
+                    // }
 
                     //Channels default is Other
                     $channels[$key] = 1;
                     //Email from ITviec 
-                    if (strpos($fromMails[$key], '@itviec.com') > 0) {
-                        $channels[$key] = 2;
-                        $mailCV = $this->getITViec($textBody);
-                        $fromNames[$key] = $mailCV[0];
-                        $fromMails[$key] = $mailCV[1];
-                        $phones[$key] = '0000000000';
-                    }
+                    // if (strpos($fromMails[$key], '@itviec.com') > 0) {
+                    //     $channels[$key] = 2;
+                    //     $mailCV = $this->getITViec($textBody);
+                    //     $fromNames[$key] = $mailCV[0];
+                    //     $fromMails[$key] = $mailCV[1];
+                    //     $phones[$key] = '0000000000';
+                    // }
 
-                    if (strpos($fromMails[$key], '@vietnamworks.com.vn') > 0) {
-                        $channels[$key] = 5;
-                        $fromMails[$key] = $mailIDs[$key] . '@vietnamworks.com.vn';
-                        $phones[$key] = '0000000000';
-                    }
+                    // if (strpos($fromMails[$key], '@vietnamworks.com.vn') > 0) {
+                    //     $channels[$key] = 5;
+                    //     $fromMails[$key] = $mailIDs[$key] . '@vietnamworks.com.vn';
+                    //     $phones[$key] = '0000000000';
+                    // }
                     $fromNames[$key] = str_replace('"', '', $fromNames[$key]);
                     $statuses[] = 1;
                 }
 
 
                 //Check Email exits in Profile
-                $emailsProfile = $this->profileRepository->getEmailsProfile();
-                if (isset($emailsProfile) && isset($fromMails)) {
-                    // chuyen mang 2 chieu thanh 1 chieu array[][] -> array[]
-                    $emailsProfile = array_column($emailsProfile, 'mail');
-                    //so sanh array[], return 0 if $mailFromMails is exit $emailsProfile
-                    foreach ($fromMails as $key => $fromMail) {
-                        if (in_array($fromMail, $emailsProfile) || $this->profileForEmailRepository->findGmailId($mailIDs[$key]))
-                            $statuses[$key] = 0;
+                // $emailsProfile = $this->profileRepository->getEmailsProfile();
+                // if (isset($emailsProfile) && isset($fromMails)) {
+                //     // chuyen mang 2 chieu thanh 1 chieu array[][] -> array[]
+                //     $emailsProfile = array_column($emailsProfile, 'mail');
+                //     //so sanh array[], return 0 if $mailFromMails is exit $emailsProfile
+                //     foreach ($fromMails as $key => $fromMail) {
+                //         if (in_array($fromMail, $emailsProfile) || $this->profileForEmailRepository->findGmailId($mailIDs[$key]))
+                //             $statuses[$key] = 0;
+                //     }
+                // }
+
+                //Check Email exits in Profile
+                
+                foreach ($fromMails as $key => $fromMail) {
+                    $profileExist = $this->profileRepository->checkEmailIsExits($fromMail);
+                    if ($profileExist || $this->profileForEmailRepository->findGmailId($mailIDs[$key])){
+                        $statuses[$key] = 0;
                     }
                 }
 
